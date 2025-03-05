@@ -1,0 +1,30 @@
+# Core dependencies
+langchain>=0.0.350
+openai>=1.6.1
+anthropic>=0.8.1
+numpy>=1.24.3
+pandas>=2.0.3
+scikit-learn>=1.3.2
+loguru>=0.7.2
+
+# PDF Processing
+PyPDF2>=3.0.1
+pdf2image>=1.16.3
+pytesseract>=0.3.10
+
+# Vector Store
+faiss-cpu>=1.7.4
+
+# Data handling
+python-dotenv>=1.0.0
+pydantic>=2.5.2
+typing-extensions>=4.8.0
+
+# Testing dependencies
+-r requirements-test.txt
+
+# Optional dependencies for development
+black>=23.11.0
+isort>=5.12.0
+mypy>=1.7.1
+flake8>=6.1.0

@@ -1,0 +1,61 @@
+2025-02-14 07:11:10 | ERROR | llm_validation_framework:calculate_metrics:240 | Error calculating metrics: 'NoneType' object has no attribute 'get'
+2025-02-14 07:11:10 | ERROR | llm_validation_framework:validate:211 | Error in validation: 'NoneType' object has no attribute 'get'
+2025-02-14 07:11:10 | ERROR | llm_validation_framework:calculate_metrics:240 | Error calculating metrics: Missing validation decisions
+2025-02-14 07:11:10 | ERROR | llm_validation_framework:calculate_metrics:240 | Error calculating metrics: 'NoneType' object has no attribute 'get'
+2025-02-14 07:11:10 | ERROR | llm_validation_framework:validate:211 | Error in validation: 'NoneType' object has no attribute 'get'
+2025-02-14 07:11:10 | ERROR | llm_validation_framework:generate_fhir_output:279 | Error generating FHIR output: 'kappa_score'
+2025-02-14 07:11:10 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path nonexistent.pdf is not a valid file or url
+2025-02-14 07:27:58 | INFO | llm_validation_framework:__init__:315 | LLM Validation Framework initialized
+2025-02-14 07:28:03 | INFO | llm_validation_framework:__init__:315 | LLM Validation Framework initialized
+2025-02-14 07:28:03 | INFO | llm_validation_framework:__init__:315 | LLM Validation Framework initialized
+2025-02-14 07:28:03 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path nonexistent.pdf is not a valid file or url
+2025-02-14 07:28:03 | ERROR | llm_validation_framework:process_document:345 | Error processing document: File path nonexistent.pdf is not a valid file or url
+2025-02-14 07:28:03 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path  is not a valid file or url
+2025-02-14 07:28:03 | ERROR | llm_validation_framework:process_document:345 | Error processing document: File path  is not a valid file or url
+2025-02-14 07:28:03 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path data/Papers is not a valid file or url
+2025-02-14 07:28:03 | ERROR | llm_validation_framework:process_document:345 | Error processing document: File path data/Papers is not a valid file or url
+2025-02-14 07:28:03 | INFO | llm_validation_framework:__init__:315 | LLM Validation Framework initialized
+2025-02-14 07:28:04 | INFO | llm_validation_framework:__init__:315 | LLM Validation Framework initialized
+2025-02-14 07:28:05 | ERROR | llm_validation_framework:calculate_metrics:248 | Error calculating metrics: Missing validation decisions
+2025-02-14 07:28:05 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path nonexistent.pdf is not a valid file or url
+2025-02-14 07:39:11 | ERROR | llm_validation_framework:generate_prompts:114 | Error generating prompts: Context cannot be None
+2025-02-14 07:39:11 | ERROR | llm_validation_framework:analyze_differences:140 | Error analyzing differences: 'NoneType' object has no attribute 'get'
+2025-02-14 07:39:11 | ERROR | llm_validation_framework:_calculate_similarity:161 | Error calculating similarity: Embeddings must have the same dimensions
+2025-02-14 07:39:12 | INFO | llm_validation_framework:__init__:324 | LLM Validation Framework initialized
+2025-02-14 07:39:17 | INFO | llm_validation_framework:__init__:324 | LLM Validation Framework initialized
+2025-02-14 07:39:17 | INFO | llm_validation_framework:__init__:324 | LLM Validation Framework initialized
+2025-02-14 07:39:17 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path nonexistent.pdf is not a valid file or url
+2025-02-14 07:39:17 | ERROR | llm_validation_framework:process_document:354 | Error processing document: File path nonexistent.pdf is not a valid file or url
+2025-02-14 07:39:17 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path  is not a valid file or url
+2025-02-14 07:39:17 | ERROR | llm_validation_framework:process_document:354 | Error processing document: File path  is not a valid file or url
+2025-02-14 07:39:17 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path data/Papers is not a valid file or url
+2025-02-14 07:39:17 | ERROR | llm_validation_framework:process_document:354 | Error processing document: File path data/Papers is not a valid file or url
+2025-02-14 07:39:17 | INFO | llm_validation_framework:__init__:324 | LLM Validation Framework initialized
+2025-02-14 07:39:18 | INFO | llm_validation_framework:__init__:324 | LLM Validation Framework initialized
+2025-02-14 07:39:19 | ERROR | llm_validation_framework:calculate_metrics:257 | Error calculating metrics: Missing validation decisions
+2025-02-14 07:39:19 | ERROR | llm_validation_framework:validate:224 | Error in validation: Invalid or empty extracted info
+2025-02-14 07:39:19 | ERROR | llm_validation_framework:generate_fhir_output:296 | Error generating FHIR output: 'kappa_score'
+2025-02-14 07:39:19 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path nonexistent.pdf is not a valid file or url
+2025-02-14 07:55:23 | ERROR | llm_validation_framework:analyze_differences:143 | Error analyzing differences: Outputs cannot be None
+2025-02-14 07:55:23 | ERROR | llm_validation_framework:_calculate_similarity:164 | Error calculating similarity: Embeddings must have the same dimensions
+2025-02-14 07:55:23 | INFO | llm_validation_framework:__init__:337 | LLM Validation Framework initialized
+2025-02-14 07:55:28 | INFO | llm_validation_framework:__init__:337 | LLM Validation Framework initialized
+2025-02-14 07:55:28 | INFO | llm_validation_framework:__init__:337 | LLM Validation Framework initialized
+2025-02-14 07:55:28 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path nonexistent.pdf is not a valid file or url
+2025-02-14 07:55:28 | ERROR | llm_validation_framework:process_document:367 | Error processing document: File path nonexistent.pdf is not a valid file or url
+2025-02-14 07:55:28 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path  is not a valid file or url
+2025-02-14 07:55:28 | ERROR | llm_validation_framework:process_document:367 | Error processing document: File path  is not a valid file or url
+2025-02-14 07:55:28 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path data/Papers is not a valid file or url
+2025-02-14 07:55:28 | ERROR | llm_validation_framework:process_document:367 | Error processing document: File path data/Papers is not a valid file or url
+2025-02-14 07:55:28 | INFO | llm_validation_framework:__init__:337 | LLM Validation Framework initialized
+2025-02-14 07:55:29 | INFO | llm_validation_framework:__init__:337 | LLM Validation Framework initialized
+2025-02-14 07:55:30 | ERROR | llm_validation_framework:calculate_metrics:270 | Error calculating metrics: Missing validation decisions
+2025-02-14 07:55:30 | ERROR | llm_validation_framework:validate:227 | Error in validation: Invalid or empty extracted info
+2025-02-14 07:55:30 | ERROR | llm_validation_framework:generate_fhir_output:309 | Error generating FHIR output: 'kappa_score'
+2025-02-14 07:55:30 | ERROR | llm_validation_framework:process_guidelines:68 | Error processing guidelines: File path nonexistent.pdf is not a valid file or url
+2025-02-14 08:26:52 | INFO | llm_validation_framework:__init__:337 | LLM Validation Framework initialized
+2025-02-14 08:29:29 | INFO | llm_validation_framework:__init__:337 | LLM Validation Framework initialized
+2025-02-14 08:49:45 | INFO | llm_validation_framework:__init__:355 | LLM Validation Framework initialized
+2025-02-14 09:02:22 | INFO | llm_validation_framework:__init__:355 | LLM Validation Framework initialized
+2025-02-14 09:08:53 | INFO | llm_validation_framework:__init__:355 | LLM Validation Framework initialized
+2025-02-25 05:58:45 | INFO | llm_validation_framework:__init__:439 | LLM Validation Framework initialized

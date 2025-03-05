@@ -1,0 +1,149 @@
+{
+  "resourceType": "Evidence",
+  "status": "active",
+  "statisticalAnalysis": {
+    "description": "Combined LLM Validation Results",
+    "modelCharacteristics": {
+      "type": {
+        "text": "Aggregate Metrics"
+      },
+      "value": {
+        "average_kappa": 1.0,
+        "average_accuracy": 1.0,
+        "average_precision": 1.0,
+        "average_recall": 1.0,
+        "average_f1": 1.0
+      },
+      "variableDefinition": [
+        {
+          "observed": {
+            "content": "The RECORD statement – checklist of items, extended from the STROBE statement, that should be reported in observational studies using \nroutinely collected health data. \n \n Item \nNo. \nSTROBE items Location in \nmanuscript where \nitems are reported \nRECORD items Location in \nmanuscript \nwhere items are \nreported \nTitle and abstract  \n 1 (a) Indicate the study’s design \nwith a commonly used term in \nthe title or the abstract (b) \nProvide in the abstract an \ninformative and balanced \nsummary of what was done and \nwhat was found \n RECORD 1.1: The type of data used \nshould be specified in the title or \nabstract. When possible, the name of \nthe databases used should be included. \n \nRECORD 1.2: If applicable, the \ngeographic region and timeframe \nwithin which the study took place \nshould be reported in the title or \nabstract. \n \nRECORD 1.3: If linkage between \ndatabases was conducted for the study, \nthis should be clearly stated in the title \nor abstract. \n \nIntroduction \nBackground \nrationale",
+            "reasoning": {
+              "primary": {
+                "prompts": {
+                  "text": "Based on the following context from a biomedical paper:\n\nThe RECORD statement – checklist of items, extended from the STROBE statement, that should be reported in observational studies using \nroutinely collected health data. \n \n Item \nNo. \nSTROBE items Location in \nmanuscript where \nitems are reported \nRECORD items Location in \nmanuscript \nwhere items are \nreported \nTitle and abstract  \n 1 (a) Indicate the study’s design \nwith a commonly used term in \nthe title or the abstract (b) \nProvide in the abstract an \ninformative and balanced \nsummary of what was done and \nwhat was found \n RECORD 1.1: The type of data used \nshould be specified in the title or \nabstract. When possible, the name of \nthe databases used should be included. \n \nRECORD 1.2: If applicable, the \ngeographic region and timeframe \nwithin which the study took place \nshould be reported in the title or \nabstract. \n \nRECORD 1.3: If linkage between \ndatabases was conducted for the study, \nthis should be clearly stated in the title \nor abstract. \n \nIntroduction \nBackground \nrationale\n\nPlease analyze the text and identify how it addresses each of the following RECORD checklist items:\n\n1. Title and Abstract Analysis:\n- Is the type of data used specified? Are database names included?\n- Is the geographic region and timeframe reported?\n- If applicable, is database linkage clearly stated?\n\n2. Methods Analysis:\n- Are the population selection methods (codes/algorithms) detailed?\n- Are validation studies of selection methods referenced?\n- For linked databases, is there a clear data linkage process?\n- Are all classification codes and algorithms listed?\n\n3. Data Handling:\n- Is the extent of database access described?\n- Are data cleaning methods explained?\n- For linked data, are linkage methods and quality evaluation provided?\n\n4. Results and Limitations:\n- Is the selection of included persons described in detail?\n- Are the implications of using routine data discussed?\n\n5. Accessibility:\n- Is information provided on accessing supplemental materials?\n\nFor each item, provide:\n1. Whether it is addressed (Yes/No/Partially)\n2. The relevant text from the paper\n3. Any gaps or recommendations for improvement",
+                  "embeddings": [
+                    0.1,
+                    0.2,
+                    0.3
+                  ],
+                  "system_prompt": "You are an expert in observational study, please based on {checklist_content} create prompts that can be used in LLMs to generate the checlist based on biomedical papers, for example RECORD 1.1: The type of data used should be specified in the title or abstract. When possible, the name of the databases used should be included.",
+                  "checklist_items": {
+                    "title_abstract": [
+                      "RECORD 1.1: Data type and database names in title/abstract",
+                      "RECORD 1.2: Geographic region and timeframe in title/abstract",
+                      "RECORD 1.3: Database linkage statement in title/abstract"
+                    ],
+                    "participants": [
+                      "RECORD 6.1: Detailed population selection methods",
+                      "RECORD 6.2: Validation studies of selection codes/algorithms",
+                      "RECORD 6.3: Data linkage process and flow diagram"
+                    ],
+                    "variables": [
+                      "RECORD 7.1: Complete list of classification codes and algorithms"
+                    ],
+                    "data_methods": [
+                      "RECORD 12.1: Database access extent",
+                      "RECORD 12.2: Data cleaning methods",
+                      "RECORD 12.3: Database linkage details and quality evaluation"
+                    ],
+                    "results": [
+                      "RECORD 13.1: Detailed selection of included persons"
+                    ],
+                    "limitations": [
+                      "RECORD 19.1: Implications of using routine data"
+                    ],
+                    "accessibility": [
+                      "RECORD 22.1: Access to supplemental information"
+                    ]
+                  }
+                },
+                "model": "deepseek-reasoner",
+                "type": "biomedical_analysis"
+              },
+              "secondary": {
+                "prompts": {
+                  "text": "Based on the following context from a biomedical paper:\n\nThe RECORD statement – checklist of items, extended from the STROBE statement, that should be reported in observational studies using \nroutinely collected health data. \n \n Item \nNo. \nSTROBE items Location in \nmanuscript where \nitems are reported \nRECORD items Location in \nmanuscript \nwhere items are \nreported \nTitle and abstract  \n 1 (a) Indicate the study’s design \nwith a commonly used term in \nthe title or the abstract (b) \nProvide in the abstract an \ninformative and balanced \nsummary of what was done and \nwhat was found \n RECORD 1.1: The type of data used \nshould be specified in the title or \nabstract. When possible, the name of \nthe databases used should be included. \n \nRECORD 1.2: If applicable, the \ngeographic region and timeframe \nwithin which the study took place \nshould be reported in the title or \nabstract. \n \nRECORD 1.3: If linkage between \ndatabases was conducted for the study, \nthis should be clearly stated in the title \nor abstract. \n \nIntroduction \nBackground \nrationale\n\nPlease analyze the text and identify how it addresses each of the following RECORD checklist items:\n\n1. Title and Abstract Analysis:\n- Is the type of data used specified? Are database names included?\n- Is the geographic region and timeframe reported?\n- If applicable, is database linkage clearly stated?\n\n2. Methods Analysis:\n- Are the population selection methods (codes/algorithms) detailed?\n- Are validation studies of selection methods referenced?\n- For linked databases, is there a clear data linkage process?\n- Are all classification codes and algorithms listed?\n\n3. Data Handling:\n- Is the extent of database access described?\n- Are data cleaning methods explained?\n- For linked data, are linkage methods and quality evaluation provided?\n\n4. Results and Limitations:\n- Is the selection of included persons described in detail?\n- Are the implications of using routine data discussed?\n\n5. Accessibility:\n- Is information provided on accessing supplemental materials?\n\nFor each item, provide:\n1. Whether it is addressed (Yes/No/Partially)\n2. The relevant text from the paper\n3. Any gaps or recommendations for improvement",
+                  "embeddings": [
+                    0.1,
+                    0.2,
+                    0.3
+                  ],
+                  "system_prompt": "You are an expert in observational study, please based on {checklist_content} create prompts that can be used in LLMs to generate the checlist based on biomedical papers, for example RECORD 1.1: The type of data used should be specified in the title or abstract. When possible, the name of the databases used should be included.",
+                  "checklist_items": {
+                    "title_abstract": [
+                      "RECORD 1.1: Data type and database names in title/abstract",
+                      "RECORD 1.2: Geographic region and timeframe in title/abstract",
+                      "RECORD 1.3: Database linkage statement in title/abstract"
+                    ],
+                    "participants": [
+                      "RECORD 6.1: Detailed population selection methods",
+                      "RECORD 6.2: Validation studies of selection codes/algorithms",
+                      "RECORD 6.3: Data linkage process and flow diagram"
+                    ],
+                    "variables": [
+                      "RECORD 7.1: Complete list of classification codes and algorithms"
+                    ],
+                    "data_methods": [
+                      "RECORD 12.1: Database access extent",
+                      "RECORD 12.2: Data cleaning methods",
+                      "RECORD 12.3: Database linkage details and quality evaluation"
+                    ],
+                    "results": [
+                      "RECORD 13.1: Detailed selection of included persons"
+                    ],
+                    "limitations": [
+                      "RECORD 19.1: Implications of using routine data"
+                    ],
+                    "accessibility": [
+                      "RECORD 22.1: Access to supplemental information"
+                    ]
+                  }
+                },
+                "model": "o3-mini-2025",
+                "type": "biomedical_analysis"
+              },
+              "embeddings": [
+                0.1,
+                0.2,
+                0.3
+              ],
+              "checklist_type": "RECORD",
+              "domain": "observational_studies"
+            }
+          },
+          "intended": {
+            "decisions": [
+              1,
+              1,
+              0,
+              1,
+              0
+            ],
+            "confidence": 0.95,
+            "explanation": "Validation by claude-3"
+          },
+          "actual": {
+            "decisions": [
+              1,
+              1,
+              0,
+              1,
+              0
+            ],
+            "confidence": 0.95,
+            "explanation": "Validation by gpt-4"
+          }
+        }
+      ]
+    }
+  },
+  "certainty": [
+    {
+      "rating": {
+        "text": "Overall Agreement Level",
+        "value": "Almost Perfect Agreement"
+      }
+    }
+  ]
+}
