@@ -57,10 +57,11 @@ class Reasoner:
             from openai import OpenAI
             
             self.client_type = "openai"
+            # Create a new client instance with explicit API key
             self.client = OpenAI(api_key=self.api_keys["openai"])
             
-            # Use model from config or default to gpt-4
-            self.model = self.config.get("openai_model", "gpt-4")
+            # Use model from config if provided
+            self.model = self.config.get("openai_model", "gpt-3.5-turbo")
             self.logger.info(f"Initialized OpenAI client for Reasoner using model: {self.model}")
         except ImportError:
             self.logger.error("Failed to import OpenAI module")
@@ -68,24 +69,24 @@ class Reasoner:
         except Exception as e:
             self.logger.error(f"Error initializing OpenAI client: {e}")
             raise
-    
-    def _initialize_anthropic(self):
-        """Initialize Anthropic client."""
-        try:
-            from anthropic import Anthropic
-            
-            self.client_type = "anthropic"
-            self.client = Anthropic(api_key=self.api_keys["anthropic"])
-            
-            # Use model from config or default to Claude model
-            self.model = self.config.get("anthropic_model", "claude-3-opus-20240229")
-            self.logger.info(f"Initialized Anthropic client for Reasoner using model: {self.model}")
-        except ImportError:
-            self.logger.error("Failed to import Anthropic module")
-            raise
-        except Exception as e:
-            self.logger.error(f"Error initializing Anthropic client: {e}")
-            raise
+        
+        def _initialize_anthropic(self):
+            """Initialize Anthropic client."""
+            try:
+                from anthropic import Anthropic
+                
+                self.client_type = "anthropic"
+                self.client = Anthropic(api_key=self.api_keys["anthropic"])
+                
+                # Use model from config or default to Claude model
+                self.model = self.config.get("anthropic_model", "claude-3-opus-20240229")
+                self.logger.info(f"Initialized Anthropic client for Reasoner using model: {self.model}")
+            except ImportError:
+                self.logger.error("Failed to import Anthropic module")
+                raise
+            except Exception as e:
+                self.logger.error(f"Error initializing Anthropic client: {e}")
+                raise
     
     def extract_guideline_items(self, guideline_texts: List[str]) -> List[Dict[str, Any]]:
         """

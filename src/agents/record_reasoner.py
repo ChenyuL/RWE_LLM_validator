@@ -124,7 +124,23 @@ class RecordReasoner(Reasoner):
             
             return []
     
-d+:|$)'
+    def _extract_with_rules(self, checklist_text: str) -> List[Dict[str, Any]]:
+        """
+        Extract RECORD items using rule-based pattern matching.
+        
+        Args:
+            checklist_text: Text of the RECORD checklist
+            
+        Returns:
+            List of dictionaries with item information
+        """
+        items = []
+        
+        # Pattern to match RECORD extension items
+        record_pattern = r'RECORD\s+(\d+\.\d+)\s+(.*?)(?=RECORD\s+\d+\.\d+|$)'
+        
+        # Pattern to match STROBE base items
+        strobe_pattern = r'Item\s+(\d+[a-z]?)\s*\(([a-z])\)(.*?)(?=\(([a-z])\)|RECORD|$)'
         
         # Extract categories
         categories = ["Title and abstract", "Introduction", "Methods", "Results", "Discussion", "Other Information"]
@@ -141,7 +157,6 @@ d+:|$)'
                     category_map[num] = category
         
         # Extract STROBE items
-        strobe_pattern = r'(\d+[a-z]?)\s*\(([a-z])\)(.*?)(?=\([a-z]\)|RECORD|$)'
         strobe_matches = re.finditer(strobe_pattern, checklist_text, re.DOTALL)
         
         for match in strobe_matches:

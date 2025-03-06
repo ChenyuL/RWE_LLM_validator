@@ -121,7 +121,10 @@ class Extractor:
                 except ImportError:
                     self.logger.warning("SentenceTransformer not available. RAG functionality will be limited.")
                     self.embeddings_model = None
-            
+        except Exception as e:
+            self.logger.error(f"Error initializing embeddings model: {e}")
+            self.embeddings_model = None
+    
     def extract_information(self, paper_text: str, prompt: str, item_id: str) -> Dict[str, Any]:
         """
         Extract information from paper text based on a prompt.
@@ -447,6 +450,3 @@ class Extractor:
             extraction["reasoning"] = extraction["reasoning"][:500] + "...\n\n[Reasoning truncated]"
         
         return extraction
-        except Exception as e:
-            self.logger.error(f"Error initializing embeddings model: {e}")
-            self.embeddings_model = None

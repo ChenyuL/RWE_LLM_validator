@@ -55,7 +55,7 @@ LLM_CONFIGS = {
     },
     "deepseek": {
         "reasoner": {
-            "model": "deepseek-chat",
+            "model": "deepseek-reasoner",
             "temperature": 0.1,
             "max_tokens": 4000
         },
