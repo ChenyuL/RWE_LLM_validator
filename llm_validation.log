@@ -60,3 +60,85 @@
 2025-02-14 09:08:53 | INFO | llm_validation_framework:__init__:355 | LLM Validation Framework initialized
 2025-02-25 05:58:45 | INFO | llm_validation_framework:__init__:439 | LLM Validation Framework initialized
 2025-03-05 23:55:36 | INFO | utils:_init_num_threads:161 | NumExpr defaulting to 16 threads.
+2025-03-06 14:11:24,850 - llm_validation - INFO - RecordReasoner initialized successfully
+2025-03-06 14:11:24,851 - llm_validation - INFO - Processing RECORD checklist: /Users/chenyuli/LLMEvaluation/RWE_LLM_validator/data/Guidelines/RECORD/RECORD_Checklist.pdf
+2025-03-06 14:11:25,062 - llm_validation - ERROR - Error processing checklist /Users/chenyuli/LLMEvaluation/RWE_LLM_validator/data/Guidelines/RECORD/RECORD_Checklist.pdf: '\n            "item_id"'
+Traceback (most recent call last):
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/process_record_checklist.py", line 74, in process_record_checklist
+    items_with_prompts = reasoner.process_record_checklist(checklist_path)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/src/agents/record_reasoner.py", line 373, in process_record_checklist
+    self.extract_record_items(checklist_text)
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/src/agents/record_reasoner.py", line 52, in extract_record_items
+    llm_extracted_items = self._extract_with_llm(checklist_text)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/src/agents/record_reasoner.py", line 106, in _extract_with_llm
+    """.format(checklist=checklist_text)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: '\n            "item_id"'
+2025-03-06 14:14:32,754 - llm_validation - INFO - RecordReasoner initialized successfully
+2025-03-06 14:14:32,754 - llm_validation - INFO - Processing RECORD checklist: /Users/chenyuli/LLMEvaluation/RWE_LLM_validator/data/Guidelines/RECORD/RECORD_Checklist.pdf
+2025-03-06 14:14:33,190 - llm_validation - ERROR - Error processing checklist /Users/chenyuli/LLMEvaluation/RWE_LLM_validator/data/Guidelines/RECORD/RECORD_Checklist.pdf: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************x-cA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+Traceback (most recent call last):
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/process_record_checklist.py", line 74, in process_record_checklist
+    items_with_prompts = reasoner.process_record_checklist(checklist_path)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/src/agents/record_reasoner.py", line 372, in process_record_checklist
+    self.extract_record_items(checklist_text)
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/src/agents/record_reasoner.py", line 52, in extract_record_items
+    llm_extracted_items = self._extract_with_llm(checklist_text)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/src/agents/record_reasoner.py", line 109, in _extract_with_llm
+    result = self._call_llm(prompt)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/src/agents/reasoner.py", line 373, in _call_llm
+    response = self.client.chat.completions.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Caskroom/miniconda/base/lib/python3.12/site-packages/openai/_utils/_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Caskroom/miniconda/base/lib/python3.12/site-packages/openai/resources/chat/completions/completions.py", line 879, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "/usr/local/Caskroom/miniconda/base/lib/python3.12/site-packages/openai/_base_client.py", line 1242, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Caskroom/miniconda/base/lib/python3.12/site-packages/openai/_base_client.py", line 919, in request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "/usr/local/Caskroom/miniconda/base/lib/python3.12/site-packages/openai/_base_client.py", line 1023, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.AuthenticationError: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************x-cA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-03-06 14:18:04,988 - llm_validation - INFO - RecordReasoner initialized successfully
+2025-03-06 14:18:04,989 - llm_validation - INFO - Processing RECORD checklist: /Users/chenyuli/LLMEvaluation/RWE_LLM_validator/data/Guidelines/RECORD/RECORD_Checklist.pdf
+2025-03-06 14:18:05,509 - llm_validation - ERROR - Error processing checklist /Users/chenyuli/LLMEvaluation/RWE_LLM_validator/data/Guidelines/RECORD/RECORD_Checklist.pdf: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************x-cA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+Traceback (most recent call last):
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/process_record_checklist.py", line 74, in process_record_checklist
+    items_with_prompts = reasoner.process_record_checklist(checklist_path)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/src/agents/record_reasoner.py", line 372, in process_record_checklist
+    self.extract_record_items(checklist_text)
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/src/agents/record_reasoner.py", line 52, in extract_record_items
+    llm_extracted_items = self._extract_with_llm(checklist_text)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/src/agents/record_reasoner.py", line 109, in _extract_with_llm
+    result = self._call_llm(prompt)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/src/agents/reasoner.py", line 373, in _call_llm
+    response = self.client.chat.completions.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Caskroom/miniconda/base/lib/python3.12/site-packages/openai/_utils/_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Caskroom/miniconda/base/lib/python3.12/site-packages/openai/resources/chat/completions/completions.py", line 879, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "/usr/local/Caskroom/miniconda/base/lib/python3.12/site-packages/openai/_base_client.py", line 1242, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Caskroom/miniconda/base/lib/python3.12/site-packages/openai/_base_client.py", line 919, in request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "/usr/local/Caskroom/miniconda/base/lib/python3.12/site-packages/openai/_base_client.py", line 1023, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.AuthenticationError: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************x-cA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}

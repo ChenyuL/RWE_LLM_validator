@@ -73,7 +73,7 @@ class RecordReasoner(Reasoner):
         Returns:
             List of dictionaries with item information
         """
-        prompt = """
+        prompt = f"""
         You are an expert in biomedical research methodology and reporting guidelines.
         
         I'm providing you with the RECORD (REporting of studies Conducted using Observational Routinely-collected health Data) checklist,
@@ -87,23 +87,23 @@ class RecordReasoner(Reasoner):
         
         Your output should be a valid JSON array of objects with this structure:
         [
-          {
+        {{
             "item_id": "1.0.a",
             "content": "Indicate the study's design with a commonly used term in the title or the abstract",
             "category": "Title and abstract"
-          },
-          {
+        }},
+        {{
             "item_id": "1.1",
             "content": "The type of data used should be specified in the title or abstract. When possible, the name of the databases used should be included.",
             "category": "Title and abstract"
-          }
+        }}
         ]
         
         Make sure to extract ALL items, both the original STROBE items and their RECORD extensions. Be precise with item numbers.
         
         Here is the RECORD checklist:
-        {checklist}
-        """.format(checklist=checklist_text)
+        {checklist_text}
+        """
         
         # Call LLM for extraction
         result = self._call_llm(prompt)
@@ -122,8 +122,7 @@ class RecordReasoner(Reasoner):
                 except json.JSONDecodeError:
                     self.logger.error("Failed to extract JSON from LLM response")
             
-            return []
-    
+        return []  # Return empty list if extraction fails
     def _extract_with_rules(self, checklist_text: str) -> List[Dict[str, Any]]:
         """
         Extract RECORD items using rule-based pattern matching.
