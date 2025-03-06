@@ -1,0 +1,49 @@
+# Environment files
+.env
+.env.*
+*.env
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+llm_validation.log
+
+# Coverage reports
+.coverage
+htmlcov/
+coverage.xml
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Output files
+output/
+
+# Temporary files
+*.bak
+*~
+.$*
+~$*
