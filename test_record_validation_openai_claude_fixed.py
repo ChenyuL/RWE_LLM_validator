@@ -753,8 +753,14 @@ def run_test(prompts_file=None):
         logger.info(f"Generated {len(guideline_info['prompts'])} prompts")
     
     # Step 2: Process the specified paper against the guidelines
-    # Use the specific paper requested by the user (34923518.pdf)
-    paper_path = os.path.join(PAPERS_PATH, "34923518.pdf")
+    # Use the paper specified by the user, or default to 34923518.pdf
+    if args.paper:
+        paper_path = args.paper
+        if not os.path.isabs(paper_path):
+            # If a relative path is provided, make it relative to the current working directory
+            paper_path = os.path.join(os.getcwd(), paper_path)
+    else:
+        paper_path = os.path.join(PAPERS_PATH, "34923518.pdf")
     
     if not os.path.exists(paper_path):
         logger.error(f"Specified paper not found: {paper_path}")
