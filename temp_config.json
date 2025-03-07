@@ -1,0 +1,1 @@
+{"reasoner": {"openai_model": "o3-mini-2025-01-31"}, "extractor": {"model": "gpt-4o"}, "validator": {"model": "claude-3-sonnet-20240229"}}

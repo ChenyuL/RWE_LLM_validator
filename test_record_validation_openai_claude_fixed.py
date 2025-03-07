@@ -391,8 +391,16 @@ class OpenAIClaudeValidationFramework:
         
         # Use the modified reasoner that includes STROBE items
         self.reasoner = Reasoner(api_keys, reasoner_config)
-        self.extractor = OpenAIExtractor(api_keys["openai"])
-        self.validator = ClaudeValidator(api_keys["anthropic"])
+        
+        # Initialize extractor with the specified model
+        extractor_config = self.config.get("extractor", {})
+        extractor_model = extractor_config.get("model", "gpt-4o")
+        self.extractor = OpenAIExtractor(api_keys["openai"], model=extractor_model)
+        
+        # Initialize validator with the specified model
+        validator_config = self.config.get("validator", {})
+        validator_model = validator_config.get("model", "claude-3-sonnet-20240229")
+        self.validator = ClaudeValidator(api_keys["anthropic"], model=validator_model)
         
         # Ensure output directory exists
         os.makedirs(OUTPUT_PATH, exist_ok=True)
@@ -716,27 +724,32 @@ def load_prompts_from_file(prompts_file):
     logger.info(f"Loaded {len(prompts)} prompts")
     return guideline_info
 
-def run_test(prompts_file=None):
+def run_test(prompts_file=None, config=None, guideline_type="RECORD"):
     """
     Run the validation test.
     
     Args:
         prompts_file: Optional path to a file containing pre-generated prompts
+        config: Optional configuration dictionary with model choices
+        guideline_type: Type of guideline to use (default: RECORD)
     """
     # Create output directory if it doesn't exist
     os.makedirs(OUTPUT_PATH, exist_ok=True)
     
     logger.info("Initializing OpenAI+Claude LLM Validation Framework")
-    framework = OpenAIClaudeValidationFramework(API_KEYS)
+    framework = OpenAIClaudeValidationFramework(API_KEYS, config)
     
-    # Step 1: Process RECORD guidelines or load existing prompts
+    # Step 1: Process guidelines or load existing prompts
     if prompts_file:
         # Load prompts from file (LLM1 output)
         guideline_info = load_prompts_from_file(prompts_file)
+        # Update guideline type if it's different from RECORD
+        if guideline_type != "RECORD":
+            guideline_info["guideline_type"] = guideline_type
     else:
         # Process guidelines with LLM1
-        logger.info("Processing RECORD guidelines")
-        guideline_info = framework.process_guideline("RECORD")
+        logger.info(f"Processing {guideline_type} guidelines")
+        guideline_info = framework.process_guideline(guideline_type)
         
         # Save guideline info for inspection
         with open(os.path.join(OUTPUT_PATH, "record_guideline_info_openai_claude.json"), "w") as f:
@@ -838,16 +851,28 @@ if __name__ == "__main__":
                       help='Mode to run: full (default), reasoner (LLM1 only), or extractor (LLM2+LLM3 using existing prompts)')
     parser.add_argument('--prompts', type=str, help='Path to prompts file (required for extractor mode)')
     parser.add_argument('--paper', type=str, help='Path to specific paper to process (optional)')
+    parser.add_argument('--guideline', type=str, default='RECORD', help='Guideline type to use (default: RECORD)')
+    parser.add_argument('--config', type=str, help='Path to configuration file with model choices')
     
     args = parser.parse_args()
+    
+    # Load config file if provided
+    config = {}
+    if args.config and os.path.exists(args.config):
+        try:
+            with open(args.config, 'r') as f:
+                config = json.load(f)
+            logger.info(f"Loaded configuration from {args.config}")
+        except Exception as e:
+            logger.error(f"Error loading configuration file: {e}")
     
     if args.mode == 'reasoner':
         # Run only the reasoner part (LLM1)
         logger.info("Running in REASONER mode (LLM1 only)")
         
         # Create framework and process guidelines
-        framework = OpenAIClaudeValidationFramework(API_KEYS)
-        guideline_info = framework.process_guideline("RECORD")
+        framework = OpenAIClaudeValidationFramework(API_KEYS, config)
+        guideline_info = framework.process_guideline(args.guideline)
         
         # Save prompts with timestamp
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -881,9 +906,9 @@ if __name__ == "__main__":
             sys.exit(1)
         
         # Run the test with the specified prompts file
-        run_test(prompts_file=args.prompts)
+        run_test(prompts_file=args.prompts, config=config, guideline_type=args.guideline)
         
     else:
         # Run the full pipeline
         logger.info("Running in FULL mode (LLM1 + LLM2 + LLM3)")
-        run_test()
+        run_test(config=config, guideline_type=args.guideline)

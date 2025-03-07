@@ -30,7 +30,7 @@ def get_all_papers():
             papers.append(os.path.join(PAPERS_DIR, file))
     return papers
 
-def run_validation(paper_path, mode="full", prompts_file=None):
+def run_validation(paper_path, mode="full", prompts_file=None, config_file=None, guideline_type="RECORD"):
     """Run validation on a single paper."""
     print(f"\n{'='*80}")
     print(f"Processing paper: {os.path.basename(paper_path)}")
@@ -46,6 +46,14 @@ def run_validation(paper_path, mode="full", prompts_file=None):
         cmd.extend(["--prompts", prompts_file])
     
     cmd.extend(["--paper", paper_path])
+    
+    # Add guideline type if specified
+    if guideline_type and guideline_type != "RECORD":
+        cmd.extend(["--guideline", guideline_type])
+    
+    # Add config file if specified
+    if config_file and os.path.exists(config_file):
+        cmd.extend(["--config", config_file])
     
     # Run the command
     try:
@@ -116,6 +124,8 @@ def main():
                       help="Mode to run: full (default), reasoner (LLM1 only), or extractor (LLM2+LLM3 using existing prompts)")
     parser.add_argument("--prompts", type=str, help="Path to prompts file (required for extractor mode)")
     parser.add_argument("--paper", type=str, help="Path to specific paper to process (optional)")
+    parser.add_argument("--config", type=str, help="Path to configuration file with model choices")
+    parser.add_argument("--guideline", type=str, default="RECORD", help="Guideline type to use (default: RECORD)")
     
     args = parser.parse_args()
     
@@ -146,7 +156,13 @@ def main():
         if '.' in pubmed_id:
             pubmed_id = pubmed_id.split('.')[0]
         
-        success = run_validation(paper, args.mode, args.prompts)
+        success = run_validation(
+            paper_path=paper,
+            mode=args.mode,
+            prompts_file=args.prompts,
+            config_file=args.config,
+            guideline_type=args.guideline
+        )
         
         if success:
             checklist_path = organize_results(paper)

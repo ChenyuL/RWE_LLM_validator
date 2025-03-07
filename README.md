@@ -41,11 +41,13 @@ This project uses a combination of OpenAI and Anthropic LLMs to validate researc
 
 ## Running the Code
 
-### Single Paper Validation
+### Command Line Interface
+
+#### Single Paper Validation
 
 The main script for running the validation on a single paper is `test_record_validation_openai_claude_fixed.py`. This script can be run in three different modes:
 
-#### Full Mode (Default)
+##### Full Mode (Default)
 
 Runs the complete pipeline: Reasoner → Extractor → Validator
 
@@ -59,7 +61,7 @@ To specify a different paper:
 python test_record_validation_openai_claude_fixed.py --paper data/Papers/34999649.pdf
 ```
 
-#### Reasoner Mode
+##### Reasoner Mode
 
 Only runs the Reasoner part (LLM1) to generate prompts:
 
@@ -67,7 +69,7 @@ Only runs the Reasoner part (LLM1) to generate prompts:
 python test_record_validation_openai_claude_fixed.py --mode reasoner
 ```
 
-#### Extractor Mode
+##### Extractor Mode
 
 Runs only the Extractor and Validator parts (LLM2 + LLM3) using existing prompts:
 
@@ -75,7 +77,7 @@ Runs only the Extractor and Validator parts (LLM2 + LLM3) using existing prompts
 python test_record_validation_openai_claude_fixed.py --mode extractor --prompts path/to/prompts.json
 ```
 
-### Batch Processing Multiple Papers
+#### Batch Processing Multiple Papers
 
 To run validation on all papers in the `data/Papers/` directory or a specific paper, use the `run_all_papers.py` script:
 
@@ -98,6 +100,29 @@ This script will:
 2. Organize results in the `output/paper_results/` directory
 3. Generate a summary of all processed papers
 4. Run the cleanup script to organize the output directory
+
+### Streamlit Web Interface
+
+For a more user-friendly experience, you can use the Streamlit web interface:
+
+```bash
+streamlit run app.py
+```
+
+The Streamlit app provides the following features:
+
+1. **Upload Guidelines**: Upload PDF files for different reporting guidelines (e.g., RECORD, STROBE)
+2. **Upload Papers**: Upload research papers in PDF format (named with PubMed IDs)
+3. **Run Validation**: Select models and run the validation process
+4. **View Results**: Explore the validation results in a user-friendly interface
+
+#### Model Selection
+
+The Streamlit app allows you to choose different models for each component:
+
+- **Reasoner Models**: o3-mini-2025-01-31, gpt-4o, gpt-4-turbo
+- **Extractor Models**: gpt-4o, gpt-4-turbo, gpt-3.5-turbo
+- **Validator Models**: claude-3-sonnet-20240229, claude-3-opus-20240229, claude-3-haiku-20240307
 
 ## Output Files
 
