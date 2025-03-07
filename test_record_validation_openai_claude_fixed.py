@@ -103,6 +103,14 @@ class OpenAIExtractor:
         # Simplified extraction - just use the first 8000 characters of the paper
         paper_excerpt = paper_text[:8000]
         
+        # Extract PubMed ID from the paper filename
+        pubmed_id = "Unknown"
+        if hasattr(self, 'paper_path') and self.paper_path:
+            paper_basename = os.path.basename(self.paper_path)
+            pubmed_id = os.path.splitext(paper_basename)[0]
+            if '.' in pubmed_id:
+                pubmed_id = pubmed_id.split('.')[0]
+        
         # Create a prompt for OpenAI
         openai_prompt = f"""
         {prompt}
@@ -112,7 +120,7 @@ class OpenAIExtractor:
         
         Please provide your extraction in the following JSON format:
         {{
-            "paper_title": "Title of the paper",
+            "pubmed_id": "{pubmed_id}",
             "record_item_id": "{item_id}",
             "extracted_content": {{
                 "compliance": "yes", "partial", "no", or "unknown",
@@ -124,7 +132,7 @@ class OpenAIExtractor:
                 ],
                 "confidence": 0.0-1.0 (your confidence in this assessment),
                 "reasoning": "explanation of your assessment",
-                "correct_answer": "your final assessment of whether the paper complies with this guideline item"
+                "correct_answer": "your answer to the specific checklist item question (e.g., for item 1.0.a 'Indicate the study's design with a commonly used term in the title or the abstract', your answer should address whether and where the study design is indicated, not just what the study design is)"
             }}
         }}
         """
@@ -169,7 +177,7 @@ class OpenAIExtractor:
             
             # If parsing fails, return a basic structure
             return {
-                "paper_title": "Unknown",
+                "pubmed_id": pubmed_id,
                 "record_item_id": item_id,
                 "extracted_content": {
                     "compliance": "unknown",
@@ -181,7 +189,7 @@ class OpenAIExtractor:
         except Exception as e:
             self.logger.error(f"Error calling OpenAI API: {e}")
             return {
-                "paper_title": "Unknown",
+                "pubmed_id": pubmed_id,
                 "record_item_id": item_id,
                 "extracted_content": {
                     "compliance": "unknown",
@@ -211,7 +219,7 @@ class ClaudeValidator:
         self.logger.info(f"Validating extraction for guideline item: {item_id}")
         
         # Extract key information
-        paper_title = extraction.get("paper_title", "Unknown")
+        pubmed_id = extraction.get("pubmed_id", extraction.get("paper_title", "Unknown"))
         extracted_content = extraction.get("extracted_content", {})
         compliance = extracted_content.get("compliance", "unknown")
         evidence = extracted_content.get("evidence", [])
@@ -229,7 +237,7 @@ class ClaudeValidator:
         DESCRIPTION: {description}
         
         EXTRACTION RESULTS:
-        - Paper Title: {paper_title}
+        - PubMed ID: {pubmed_id}
         - Compliance: {compliance}
         - Confidence: {confidence}
         - Evidence: {json.dumps(evidence, indent=2)}
@@ -243,11 +251,11 @@ class ClaudeValidator:
         
         Please provide your validation in the following JSON format:
         {{
-            "paper_title": "{paper_title}",
+            "pubmed_id": "{pubmed_id}",
             "record_item_id": "{item_id}",
             "validate_result": "yes", "partial", "no", or "unknown",
             "Reason": "your assessment of the extraction",
-            "correct_answer": "your final assessment of whether the paper complies with this guideline item"
+            "correct_answer": "your answer to the specific checklist item question (e.g., for item 1.0.a 'Indicate the study's design with a commonly used term in the title or the abstract', your answer should address whether and where the study design is indicated, not just what the study design is)"
         }}
         """
         
@@ -290,7 +298,7 @@ class ClaudeValidator:
             
             # If parsing fails, return a basic structure
             validation = {
-                "paper_title": paper_title,
+                "pubmed_id": pubmed_id,
                 "record_item_id": item_id,
                 "validate_result": compliance,
                 "Reason": f"Failed to parse result: {result[:500]}..."
@@ -303,7 +311,7 @@ class ClaudeValidator:
         except Exception as e:
             self.logger.error(f"Error calling Claude API: {e}")
             validation = {
-                "paper_title": paper_title,
+                "pubmed_id": pubmed_id,
                 "record_item_id": item_id,
                 "validate_result": "unknown",
                 "Reason": f"Error: {str(e)}"
@@ -450,6 +458,9 @@ class OpenAIClaudeValidationFramework:
         for i in range(0, len(item_ids), batch_size):
             batch_item_ids = item_ids[i:i+batch_size]
             self.logger.info(f"Processing batch {i//batch_size + 1}/{(len(item_ids) + batch_size - 1)//batch_size}: {batch_item_ids}")
+            
+            # Set the paper_path in the extractor so it can extract the pubmed_id
+            self.extractor.paper_path = paper_path
             
             for item_id in batch_item_ids:
                 prompt = guideline_prompts["prompts"][item_id]
