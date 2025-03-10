@@ -81,6 +81,7 @@ def run_validation(paper_path, guideline_type, mode="full", reasoner_model="o3-m
         
         # Create a placeholder for the output
         output_placeholder = st.empty()
+        accumulated_output = ""
         
         # Stream the output
         while True:
@@ -88,7 +89,8 @@ def run_validation(paper_path, guideline_type, mode="full", reasoner_model="o3-m
             if output == '' and process.poll() is not None:
                 break
             if output:
-                output_placeholder.text(output_placeholder.text + output)
+                accumulated_output += output
+                output_placeholder.text(accumulated_output)
         
         # Get the return code
         return_code = process.poll()
