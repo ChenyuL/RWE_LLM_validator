@@ -30,7 +30,7 @@ def get_all_papers():
             papers.append(os.path.join(PAPERS_DIR, file))
     return papers
 
-def run_validation(paper_path, mode="full", prompts_file=None, config_file=None, guideline_type="RECORD"):
+def run_validation(paper_path, mode="full", prompts_file=None, config_file=None, checklist_type="RECORD"):
     """Run validation on a single paper."""
     print(f"\n{'='*80}")
     print(f"Processing paper: {os.path.basename(paper_path)}")
@@ -47,9 +47,8 @@ def run_validation(paper_path, mode="full", prompts_file=None, config_file=None,
     
     cmd.extend(["--paper", paper_path])
     
-    # Add guideline type if specified
-    if guideline_type and guideline_type != "RECORD":
-        cmd.extend(["--guideline", guideline_type])
+    # Always add checklist type
+    cmd.extend(["--checklist", checklist_type])
     
     # Add config file if specified
     if config_file and os.path.exists(config_file):
@@ -63,15 +62,15 @@ def run_validation(paper_path, mode="full", prompts_file=None, config_file=None,
         print(f"Error processing paper {os.path.basename(paper_path)}: {e}")
         return False
 
-def organize_results(paper_path):
+def organize_results(paper_path, checklist_type="RECORD"):
     """Organize results for a paper into its own directory."""
     paper_basename = os.path.basename(paper_path)
-    pubmed_id = os.path.splitext(paper_basename)[0]
-    if '.' in pubmed_id:
-        pubmed_id = pubmed_id.split('.')[0]
+    paper_identifier = os.path.splitext(paper_basename)[0]
+    if '.' in paper_identifier:
+        paper_identifier = paper_identifier.split('.')[0]
     
-    # Create a directory for this paper's results
-    paper_results_dir = os.path.join(RESULTS_DIR, pubmed_id)
+    # Create a directory for this paper's results with checklist type
+    paper_results_dir = os.path.join(RESULTS_DIR, f"{paper_identifier}_{checklist_type}")
     os.makedirs(paper_results_dir, exist_ok=True)
     
     # Find the most recent results for this paper
@@ -79,17 +78,17 @@ def organize_results(paper_path):
     result_files = []
     
     for file in os.listdir(OUTPUT_DIR):
-        if pubmed_id in file and timestamp in file:
+        if paper_identifier in file and timestamp in file:
             result_files.append(os.path.join(OUTPUT_DIR, file))
     
     # Move the results to the paper's directory
     for file in result_files:
         shutil.copy2(file, paper_results_dir)
     
-    print(f"Results for {pubmed_id} organized in {paper_results_dir}")
+    print(f"Results for {paper_identifier} with {checklist_type} checklist organized in {paper_results_dir}")
     
-    # Return the path to the full record checklist
-    checklist_files = [f for f in result_files if "full_record_checklist" in f]
+    # Return the path to the full checklist
+    checklist_files = [f for f in result_files if "full_" in f.lower() and "checklist" in f.lower()]
     if checklist_files:
         return os.path.join(paper_results_dir, os.path.basename(checklist_files[0]))
     return None
@@ -125,7 +124,7 @@ def main():
     parser.add_argument("--prompts", type=str, help="Path to prompts file (required for extractor mode)")
     parser.add_argument("--paper", type=str, help="Path to specific paper to process (optional)")
     parser.add_argument("--config", type=str, help="Path to configuration file with model choices")
-    parser.add_argument("--guideline", type=str, default="RECORD", help="Guideline type to use (default: RECORD)")
+    parser.add_argument("--checklist", type=str, default="RECORD", help="Checklist type to use (default: RECORD)")
     
     args = parser.parse_args()
     
@@ -152,27 +151,28 @@ def main():
     results = {}
     for paper in papers:
         paper_basename = os.path.basename(paper)
-        pubmed_id = os.path.splitext(paper_basename)[0]
-        if '.' in pubmed_id:
-            pubmed_id = pubmed_id.split('.')[0]
+        paper_identifier = os.path.splitext(paper_basename)[0]
+        if '.' in paper_identifier:
+            paper_identifier = paper_identifier.split('.')[0]
         
         success = run_validation(
             paper_path=paper,
             mode=args.mode,
             prompts_file=args.prompts,
             config_file=args.config,
-            guideline_type=args.guideline
+            checklist_type=args.checklist
         )
         
         if success:
-            checklist_path = organize_results(paper)
-            results[pubmed_id] = {
+            checklist_path = organize_results(paper, checklist_type=args.checklist)
+            results[paper_identifier] = {
                 "success": True,
                 "paper_path": paper,
-                "checklist_path": checklist_path
+                "checklist_path": checklist_path,
+                "checklist_type": args.checklist
             }
         else:
-            results[pubmed_id] = {
+            results[paper_identifier] = {
                 "success": False,
                 "paper_path": paper,
                 "error": "Validation failed"

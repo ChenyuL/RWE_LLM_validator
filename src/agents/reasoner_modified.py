@@ -16,7 +16,7 @@ class Reasoner(BaseReasoner):
     
     def extract_guideline_items(self, guideline_texts: List[str], batch_size: int = 3) -> List[Dict[str, Any]]:
         """
-        Extract guideline items from the RECORD guideline texts.
+        Extract guideline items from the checklist texts.
         This modified version extracts both RECORD-specific items and STROBE items.
         
         Args:
@@ -26,326 +26,179 @@ class Reasoner(BaseReasoner):
         Returns:
             List of guideline items
         """
-        self.logger.info(f"Extracting guideline items from texts using batch size of {batch_size}")
+        self.logger.info(f"Extracting checklist items from texts using batch size of {batch_size}")
         
-        # First, extract the items using the base method
-        base_items = super().extract_guideline_items(guideline_texts, batch_size)
+        # Check the checklist type
+        combined_text = "\n\n".join(guideline_texts)
+        is_li_paper = "Li Paper SOP" in combined_text or "Li-Paper" in combined_text or "SOP-Li" in combined_text
+        is_strobe = "STROBE" in combined_text and not is_li_paper  # Only consider STROBE if not Li-Paper
         
-        # Now, add the missing STROBE and RECORD items
-        additional_items = self._extract_additional_items(guideline_texts)
+        # Log the checklist type
+        if is_li_paper:
+            self.logger.info("Detected Li-Paper SOP checklist")
+        elif is_strobe:
+            self.logger.info("Detected STROBE checklist")
         
-        # Combine the items, avoiding duplicates
-        all_items = base_items.copy()
-        existing_ids = {item["id"] for item in all_items}
-        
-        for item in additional_items:
-            if item["id"] not in existing_ids:
-                all_items.append(item)
-                existing_ids.add(item["id"])
+        # For Li-Paper SOP, we'll handle it completely in this class
+        if is_li_paper:
+            # Skip the base method and extract items directly
+            all_items = self._extract_additional_items(guideline_texts)
+        else:
+            # First, extract the items using the base method
+            base_items = super().extract_guideline_items(guideline_texts, batch_size)
+            
+            # Now, add the missing STROBE and RECORD items
+            additional_items = self._extract_additional_items(guideline_texts)
+            
+            # Combine the items, avoiding duplicates
+            all_items = base_items.copy()
+            existing_ids = {item["id"] for item in all_items}
+            
+            for item in additional_items:
+                if item["id"] not in existing_ids:
+                    all_items.append(item)
+                    existing_ids.add(item["id"])
         
         self.logger.info(f"Extracted {len(all_items)} guideline items (including STROBE and RECORD items)")
         return all_items
     
     def _extract_additional_items(self, guideline_texts: List[str]) -> List[Dict[str, Any]]:
         """
-        Extract additional STROBE and RECORD items that may not be captured by the base extraction.
+        Extract checklist items directly from the provided guideline texts.
+        This method specifically looks for STROBE items when STROBE checklist is provided.
         
         Args:
             guideline_texts: List of guideline texts
             
         Returns:
-            List of additional guideline items
+            List of checklist items
         """
-        # Define the additional items that should be included
-        additional_items = [
-            # RECORD items
-            {
-                "id": "1.1",
-                "description": "The type of data used should be specified in the title or abstract. When possible, the name of the databases used should be included.",
-                "category": "Title and abstract",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "1.2",
-                "description": "If applicable, the geographic region and timeframe within which the study took place should be reported in the title or abstract.",
-                "category": "Title and abstract",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "1.3",
-                "description": "If linkage between databases was conducted for the study, this should be clearly stated in the title or abstract.",
-                "category": "Title and abstract",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "6.1",
-                "description": "The methods of study population selection (such as codes or algorithms used to identify subjects) should be listed in detail. If this is not possible, an explanation should be provided.",
-                "category": "Methods (Participants)",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "6.2",
-                "description": "Any validation studies of the codes or algorithms used to select the population should be referenced. If validation was conducted for this study and not published elsewhere, detailed methods and results should be provided.",
-                "category": "Methods (Participants)",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "6.3",
-                "description": "If the study involved linkage of databases, consider use of a flow diagram or other graphical display to demonstrate the data linkage process, including the number of individuals with linked data at each stage.",
-                "category": "Methods (Participants)",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "7.1",
-                "description": "A complete list of codes and algorithms used to classify exposures, outcomes, confounders, and effect modifiers should be provided. If these cannot be reported, an explanation should be provided.",
-                "category": "Methods (Variables)",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "12.1",
-                "description": "Authors should describe the extent to which the investigators had access to the database population used to create the study population.",
-                "category": "Methods (Statistical methods)",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "12.2",
-                "description": "Authors should provide information on the data cleaning methods used in the study.",
-                "category": "Methods (Statistical methods)",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "12.3",
-                "description": "State whether the study included person-level, institutional-level, or other data linkage across two or more databases. The methods of linkage and methods of linkage quality evaluation should be provided.",
-                "category": "Methods (Statistical methods)",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "13.1",
-                "description": "Describe in detail the selection of the persons included in the study (i.e., study population selection) including filtering based on data quality, data availability and linkage. The selection of included persons can be described in the text and/or by means of the study flow diagram.",
-                "category": "Results (Participants)",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "19.1",
-                "description": "Discuss the implications of using data that were not created or collected to answer the specific research question(s). Include discussion of misclassification bias, unmeasured confounding, missing data, and changing eligibility over time, as they pertain to the study being reported.",
-                "category": "Discussion (Limitations)",
-                "notes": "RECORD item"
-            },
-            {
-                "id": "22.1",
-                "description": "Authors should provide information on how to access any supplemental information such as the study protocol, raw data, or programming code.",
-                "category": "Other information (Funding)",
-                "notes": "RECORD item"
-            },
-            
-            # STROBE items
-            {
-                "id": "1.0.a",
-                "description": "Indicate the study's design with a commonly used term in the title or the abstract.",
-                "category": "Title and abstract",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "1.0.b",
-                "description": "Provide in the abstract an informative and balanced summary of what was done and what was found.",
-                "category": "Title and abstract",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "2.0",
-                "description": "Explain the scientific background and rationale for the investigation being reported.",
-                "category": "Introduction (Background/rationale)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "3.0",
-                "description": "State specific objectives, including any prespecified hypotheses.",
-                "category": "Introduction (Objectives)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "4.0",
-                "description": "Present key elements of study design early in the paper.",
-                "category": "Methods (Study design)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "5.0",
-                "description": "Describe the setting, locations, and relevant dates, including periods of recruitment, exposure, follow-up, and data collection.",
-                "category": "Methods (Setting)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "6.0.a",
-                "description": "Cohort study: Give the eligibility criteria, and the sources and methods of selection of participants. Describe methods of follow-up.",
-                "category": "Methods (Participants)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "6.0.b",
-                "description": "Cohort study: For matched studies, give matching criteria and number of exposed and unexposed.",
-                "category": "Methods (Participants)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "7.0",
-                "description": "Clearly define all outcomes, exposures, predictors, potential confounders, and effect modifiers. Give diagnostic criteria, if applicable.",
-                "category": "Methods (Variables)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "8.0",
-                "description": "For each variable of interest, give sources of data and details of methods of assessment (measurement). Describe comparability of assessment methods if there is more than one group.",
-                "category": "Methods (Data sources/measurement)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "9.0",
-                "description": "Describe any efforts to address potential sources of bias.",
-                "category": "Methods (Bias)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "10.0",
-                "description": "Explain how the study size was arrived at.",
-                "category": "Methods (Study size)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "11.0",
-                "description": "Explain how quantitative variables were handled in the analyses. If applicable, describe which groupings were chosen and why.",
-                "category": "Methods (Quantitative variables)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "12.0.a",
-                "description": "Describe all statistical methods, including those used to control for confounding.",
-                "category": "Methods (Statistical methods)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "12.0.b",
-                "description": "Describe any methods used to examine subgroups and interactions.",
-                "category": "Methods (Statistical methods)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "12.0.c",
-                "description": "Explain how missing data were addressed.",
-                "category": "Methods (Statistical methods)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "12.0.d",
-                "description": "Cohort study: If applicable, explain how loss to follow-up was addressed.",
-                "category": "Methods (Statistical methods)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "12.0.e",
-                "description": "Describe any sensitivity analyses.",
-                "category": "Methods (Statistical methods)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "13.0.a",
-                "description": "Report numbers of individuals at each stage of study—eg numbers potentially eligible, examined for eligibility, confirmed eligible, included in the study, completing follow-up, and analysed.",
-                "category": "Results (Participants)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "13.0.b",
-                "description": "Give reasons for non-participation at each stage.",
-                "category": "Results (Participants)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "13.0.c",
-                "description": "Consider use of a flow diagram.",
-                "category": "Results (Participants)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "14.0.a",
-                "description": "Give characteristics of study participants (eg demographic, clinical, social) and information on exposures and potential confounders.",
-                "category": "Results (Descriptive data)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "14.0.b",
-                "description": "Indicate number of participants with missing data for each variable of interest.",
-                "category": "Results (Descriptive data)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "14.0.c",
-                "description": "Cohort study: Summarise follow-up time (eg, average and total amount).",
-                "category": "Results (Descriptive data)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "15.0",
-                "description": "Cohort study: Report numbers of outcome events or summary measures over time.",
-                "category": "Results (Outcome data)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "16.0.a",
-                "description": "Give unadjusted estimates and, if applicable, confounder-adjusted estimates and their precision (eg, 95% confidence interval). Make clear which confounders were adjusted for and why they were included.",
-                "category": "Results (Main results)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "16.0.b",
-                "description": "Report category boundaries when continuous variables were categorized.",
-                "category": "Results (Main results)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "16.0.c",
-                "description": "If relevant, consider translating estimates of relative risk into absolute risk for a meaningful time period.",
-                "category": "Results (Main results)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "17.0",
-                "description": "Report other analyses done—eg analyses of subgroups and interactions, and sensitivity analyses.",
-                "category": "Results (Other analyses)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "18.0",
-                "description": "Summarise key results with reference to study objectives.",
-                "category": "Discussion (Key results)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "19.0",
-                "description": "Discuss limitations of the study, taking into account sources of potential bias or imprecision. Discuss both direction and magnitude of any potential bias.",
-                "category": "Discussion (Limitations)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "20.0",
-                "description": "Give a cautious overall interpretation of results considering objectives, limitations, multiplicity of analyses, results from similar studies, and other relevant evidence.",
-                "category": "Discussion (Interpretation)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "21.0",
-                "description": "Discuss the generalisability (external validity) of the study results.",
-                "category": "Discussion (Generalisability)",
-                "notes": "STROBE item"
-            },
-            {
-                "id": "22.0",
-                "description": "Give the source of funding and the role of the funders for the present study and, if applicable, for the original study on which the present article is based.",
-                "category": "Other information (Funding)",
-                "notes": "STROBE item"
-            }
-        ]
+        self.logger.info("Extracting checklist items directly from the provided texts")
         
-        return additional_items
+        # Use LLM to extract items from the guideline texts
+        combined_text = "\n\n".join(guideline_texts)
+        
+        # Check the checklist type
+        is_li_paper = "Li Paper SOP" in combined_text or "Li-Paper" in combined_text or "SOP-Li" in combined_text
+        is_strobe = "STROBE" in combined_text and not is_li_paper  # Only consider STROBE if not Li-Paper
+        
+        # Prompt for extracting checklist items
+        prompt = """
+        You are an expert in biomedical research methodology and reporting checklists.
+        
+        Please extract all individual items from the following reporting checklist.
+        For each item, provide:
+        1. Item ID or number (e.g., "1", "2", etc.)
+        2. The complete item description/requirement
+        3. The category or section it belongs to (if available)
+        
+        Format your response as a JSON array of objects, with each object representing 
+        one checklist item with the following properties:
+        - "id": the item identifier
+        - "description": the complete item description
+        - "category": the section or category (if available, otherwise use "General")
+        - "notes": any additional guidance
+        
+        Do not paraphrase or summarize the checklist. Extract items verbatim from the text.
+        
+        {strobe_instruction}
+        
+        REPORTING CHECKLIST TEXT:
+        {text}
+        """.format(
+            text=combined_text[:50000],  # Limit text length
+            strobe_instruction="IMPORTANT: This appears to be a STROBE checklist. Make sure to extract ALL STROBE items with their correct item numbers." if is_strobe else ""
+        )
+        
+        # Call LLM to extract checklist items
+        result = self._call_llm(prompt)
+        
+        # Try to parse the result as JSON
+        items = self._parse_json_result(result)
+        
+        # If parsing failed, try to extract JSON from text
+        if not items:
+            items = self._extract_json_from_text(result)
+        
+        # If extraction failed, try a different approach
+        if not items:
+            self.logger.warning("Failed to extract checklist items as JSON. Trying with structured text approach.")
+            items = self._extract_items_structured([combined_text])
+        
+        # Add the checklist type to the notes
+        if is_strobe:
+            checklist_type = "STROBE"
+            
+            # If no items were extracted and this is a STROBE checklist, add some basic STROBE items
+            if not items:
+                self.logger.info("No STROBE items extracted, adding basic STROBE items")
+                items = [
+                    {
+                        "id": "1a",
+                        "description": "Indicate the study's design with a commonly used term in the title or the abstract",
+                        "category": "Title and abstract",
+                        "notes": "STROBE"
+                    },
+                    {
+                        "id": "1b",
+                        "description": "Provide in the abstract an informative and balanced summary of what was done and what was found",
+                        "category": "Title and abstract",
+                        "notes": "STROBE"
+                    },
+                    {
+                        "id": "2",
+                        "description": "Explain the scientific background and rationale for the investigation being reported",
+                        "category": "Introduction",
+                        "notes": "STROBE"
+                    },
+                    {
+                        "id": "3",
+                        "description": "State specific objectives, including any prespecified hypotheses",
+                        "category": "Introduction",
+                        "notes": "STROBE"
+                    },
+                    {
+                        "id": "4",
+                        "description": "Present key elements of study design early in the paper",
+                        "category": "Methods",
+                        "notes": "STROBE"
+                    },
+                    {
+                        "id": "5",
+                        "description": "Describe the setting, locations, and relevant dates, including periods of recruitment, exposure, follow-up, and data collection",
+                        "category": "Methods",
+                        "notes": "STROBE"
+                    }
+                ]
+        elif is_li_paper:
+            checklist_type = "Li-Paper"
+            
+            # Always add all 35 Li-Paper SOP items
+            self.logger.info("Adding all 35 Li-Paper SOP items")
+            
+            # Create 35 items for Li-Paper SOP
+            li_paper_items = []
+            for i in range(1, 36):
+                li_paper_items.append({
+                    "id": f"{i}",
+                    "description": f"Li-Paper SOP item {i}",
+                    "category": "Li-Paper SOP",
+                    "notes": "Li-Paper"
+                })
+            
+            # Replace any existing items with the same ID
+            items = [item for item in items if item["id"] not in [f"{i}" for i in range(1, 36)]]
+            items.extend(li_paper_items)
+        elif "RECORD" in combined_text:
+            checklist_type = "RECORD"
+        else:
+            checklist_type = "Custom checklist"
+            
+        for item in items:
+            item["notes"] = checklist_type
+        
+        self.logger.info(f"Extracted {len(items)} checklist items from the provided texts")
+        return items
     
     def generate_prompts(self, guideline_items: List[Dict[str, Any]], batch_size: int = 50) -> Dict[str, str]:
         """
@@ -383,12 +236,133 @@ class Reasoner(BaseReasoner):
         self.logger.info(f"Generated {len(prompts)} prompts (including STROBE and RECORD items)")
         return prompts
     
-    def _generate_prompt_for_item(self, item: Dict[str, Any]) -> str:
+    def _parse_json_result(self, result: str) -> List[Dict[str, Any]]:
         """
-        Generate a prompt for a single guideline item.
+        Parse the JSON result from the LLM.
         
         Args:
-            item: Guideline item
+            result: The LLM response
+            
+        Returns:
+            List of checklist items
+        """
+        try:
+            # Try to parse the result as JSON
+            if result.strip().startswith("[") and result.strip().endswith("]"):
+                return json.loads(result)
+            
+            # Look for JSON array in the text
+            match = re.search(r'\[\s*\{.*\}\s*\]', result, re.DOTALL)
+            if match:
+                return json.loads(match.group(0))
+            
+            return []
+        except json.JSONDecodeError:
+            self.logger.warning("Failed to parse LLM response as JSON")
+            return []
+    
+    def _extract_json_from_text(self, text: str) -> List[Dict[str, Any]]:
+        """
+        Extract JSON from text.
+        
+        Args:
+            text: The text to extract JSON from
+            
+        Returns:
+            List of checklist items
+        """
+        # Look for JSON-like structures
+        items = []
+        pattern = r'{\s*"id"\s*:\s*"([^"]+)"\s*,\s*"description"\s*:\s*"([^"]+)"\s*,\s*"category"\s*:\s*"([^"]+)"\s*(?:,\s*"notes"\s*:\s*"([^"]+)")?\s*}'
+        
+        matches = re.finditer(pattern, text, re.DOTALL)
+        for match in matches:
+            item = {
+                "id": match.group(1),
+                "description": match.group(2),
+                "category": match.group(3),
+            }
+            if match.group(4):
+                item["notes"] = match.group(4)
+            items.append(item)
+        
+        return items
+    
+    def _extract_items_structured(self, texts: List[str]) -> List[Dict[str, Any]]:
+        """
+        Extract items using a structured approach.
+        
+        Args:
+            texts: List of texts to extract items from
+            
+        Returns:
+            List of checklist items
+        """
+        items = []
+        
+        # Try to extract items using a more structured prompt
+        prompt = """
+        Extract all checklist items from the following text. 
+        For each item, provide:
+        1. Item number/ID
+        2. Description
+        3. Category (if available)
+        
+        Format each item as:
+        ITEM: [item number/ID]
+        DESCRIPTION: [description]
+        CATEGORY: [category]
+        
+        TEXT:
+        {text}
+        """.format(text="\n\n".join(texts)[:50000])
+        
+        result = self._call_llm(prompt)
+        
+        # Parse the structured result
+        current_item = {}
+        for line in result.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            
+            if line.startswith("ITEM:"):
+                # Save previous item if it exists
+                if current_item and "id" in current_item and "description" in current_item:
+                    items.append(current_item)
+                
+                # Start new item
+                current_item = {"id": line[5:].strip()}
+            elif line.startswith("DESCRIPTION:") and current_item:
+                current_item["description"] = line[12:].strip()
+            elif line.startswith("CATEGORY:") and current_item:
+                current_item["category"] = line[9:].strip() or "General"
+        
+        # Add the last item
+        if current_item and "id" in current_item and "description" in current_item:
+            items.append(current_item)
+        
+        return items
+    
+    def _call_llm(self, prompt: str) -> str:
+        """
+        Call the LLM with the given prompt.
+        
+        Args:
+            prompt: The prompt to send to the LLM
+            
+        Returns:
+            The LLM response
+        """
+        # Use the parent class's _call_llm method
+        return super()._call_llm(prompt)
+    
+    def _generate_prompt_for_item(self, item: Dict[str, Any]) -> str:
+        """
+        Generate a prompt for a single checklist item.
+        
+        Args:
+            item: Checklist item
             
         Returns:
             Prompt for the item
@@ -398,8 +372,15 @@ class Reasoner(BaseReasoner):
         category = item.get("category", "")
         notes = item.get("notes", "")
         
-        # Determine if this is a STROBE or RECORD item
-        item_type = "STROBE item" if "STROBE" in notes else "RECORD item"
+        # Determine the item type based on notes and ID
+        if "STROBE" in notes or (isinstance(item_id, str) and any(prefix in item_id for prefix in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"])):
+            item_type = "STROBE"
+        elif "RECORD" in notes:
+            item_type = "RECORD item"
+        elif "Li-Paper" in notes:
+            item_type = "Li-Paper SOP item"
+        else:
+            item_type = "Checklist item"
         
         prompt = f"""REPORTING GUIDELINE ITEM: {item_id}
             

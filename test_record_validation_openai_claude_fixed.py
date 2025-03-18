@@ -98,18 +98,21 @@ class OpenAIExtractor:
         """
         from openai import OpenAI
         
-        self.logger.info(f"Extracting information for guideline item: {item_id}")
+        self.logger.info(f"Extracting information for checklist item: {item_id}")
         
         # Simplified extraction - just use the first 8000 characters of the paper
         paper_excerpt = paper_text[:8000]
         
-        # Extract PubMed ID from the paper filename
-        pubmed_id = "Unknown"
+        # Extract paper identifier from the paper filename
+        paper_identifier = "Unknown"
         if hasattr(self, 'paper_path') and self.paper_path:
             paper_basename = os.path.basename(self.paper_path)
-            pubmed_id = os.path.splitext(paper_basename)[0]
-            if '.' in pubmed_id:
-                pubmed_id = pubmed_id.split('.')[0]
+            paper_identifier = os.path.splitext(paper_basename)[0]
+            if '.' in paper_identifier:
+                paper_identifier = paper_identifier.split('.')[0]
+        
+        # Get the checklist name from the class or use a default
+        checklist_name = getattr(self, 'checklist_name', 'RECORD')
         
         # Create a prompt for OpenAI
         openai_prompt = f"""
@@ -120,8 +123,8 @@ class OpenAIExtractor:
         
         Please provide your extraction in the following JSON format:
         {{
-            "pubmed_id": "{pubmed_id}",
-            "record_item_id": "{item_id}",
+            "paper_identifier": "{paper_identifier}",
+            "{checklist_name}_{paper_identifier}": "{item_id}",
             "extracted_content": {{
                 "compliance": "yes", "partial", "no", or "unknown",
                 "evidence": [
@@ -130,7 +133,6 @@ class OpenAIExtractor:
                         "location": "section/page information if available"
                     }}
                 ],
-                "confidence": 0.0-1.0 (your confidence in this assessment),
                 "reasoning": "explanation of your assessment",
                 "correct_answer": "your answer to the specific checklist item question (e.g., for item 1.0.a 'Indicate the study's design with a commonly used term in the title or the abstract', your answer should address whether and where the study design is indicated, not just what the study design is)"
             }}
@@ -175,26 +177,31 @@ class OpenAIExtractor:
                     except json.JSONDecodeError:
                         pass
             
+            # Get the checklist name from the class or use a default
+            checklist_name = getattr(self, 'checklist_name', 'RECORD')
+            
             # If parsing fails, return a basic structure
             return {
-                "pubmed_id": pubmed_id,
-                "record_item_id": item_id,
+                "paper_identifier": paper_identifier,
+                f"{checklist_name}_{paper_identifier}": item_id,
                 "extracted_content": {
                     "compliance": "unknown",
                     "evidence": [],
-                    "confidence": 0.0,
                     "reasoning": f"Failed to parse result: {result[:500]}..."
                 }
             }
         except Exception as e:
             self.logger.error(f"Error calling OpenAI API: {e}")
+            
+            # Get the checklist name from the class or use a default
+            checklist_name = getattr(self, 'checklist_name', 'RECORD')
+            
             return {
-                "pubmed_id": pubmed_id,
-                "record_item_id": item_id,
+                "paper_identifier": paper_identifier,
+                f"{checklist_name}_{paper_identifier}": item_id,
                 "extracted_content": {
                     "compliance": "unknown",
                     "evidence": [],
-                    "confidence": 0.0,
                     "reasoning": f"Error: {str(e)}"
                 }
             }
@@ -216,44 +223,46 @@ class ClaudeValidator:
         """
         from anthropic import Anthropic
         
-        self.logger.info(f"Validating extraction for guideline item: {item_id}")
+        self.logger.info(f"Validating extraction for checklist item: {item_id}")
         
         # Extract key information
-        pubmed_id = extraction.get("pubmed_id", extraction.get("paper_title", "Unknown"))
+        paper_identifier = extraction.get("paper_identifier", extraction.get("paper_title", "Unknown"))
         extracted_content = extraction.get("extracted_content", {})
         compliance = extracted_content.get("compliance", "unknown")
         evidence = extracted_content.get("evidence", [])
         confidence = extracted_content.get("confidence", 0.0)
         reasoning = extracted_content.get("reasoning", "")
         
-        # Extract guideline information
+        # Extract checklist information
         description = guideline_item.get("description", "")
+        
+        # Get the checklist name from the class or use a default
+        checklist_name = getattr(self, 'checklist_name', 'RECORD')
         
         # Build prompt for validation
         claude_prompt = f"""
-        You are an expert validator for biomedical research reporting guidelines.
+        You are an expert validator for biomedical research reporting checklists.
         
-        GUIDELINE ITEM: {item_id}
+        CHECKLIST ITEM: {item_id}
         DESCRIPTION: {description}
         
         EXTRACTION RESULTS:
-        - PubMed ID: {pubmed_id}
+        - Paper Identifier: {paper_identifier}
         - Compliance: {compliance}
-        - Confidence: {confidence}
         - Evidence: {json.dumps(evidence, indent=2)}
         - Reasoning: {reasoning}
         
         VALIDATION TASK:
         1. Evaluate whether the compliance assessment is correct based on the evidence provided.
-        2. Assess whether the evidence is sufficient and relevant to the guideline item.
-        3. Provide a final assessment of compliance.
-        4. Provide a correct answer that will be used in the final RECORD checklist.
+        2. Assess whether the evidence is sufficient and relevant to the checklist item.
+        3. Provide a final assessment of whether you agree with the extractor's assessment.
+        4. Provide a correct answer that will be used in the final checklist.
         
         Please provide your validation in the following JSON format:
         {{
-            "pubmed_id": "{pubmed_id}",
-            "record_item_id": "{item_id}",
-            "validate_result": "yes", "partial", "no", or "unknown",
+            "paper_identifier": "{paper_identifier}",
+            "{checklist_name}_{paper_identifier}": "{item_id}",
+            "validate_result": "agree with extractor", "do not agree with extractor", or "unknown",
             "Reason": "your assessment of the extraction",
             "correct_answer": "your answer to the specific checklist item question (e.g., for item 1.0.a 'Indicate the study's design with a commonly used term in the title or the abstract', your answer should address whether and where the study design is indicated, not just what the study design is)"
         }}
@@ -296,10 +305,13 @@ class ClaudeValidator:
                     except json.JSONDecodeError:
                         pass
             
+            # Get the checklist name from the class or use a default
+            checklist_name = getattr(self, 'checklist_name', 'RECORD')
+            
             # If parsing fails, return a basic structure
             validation = {
-                "pubmed_id": pubmed_id,
-                "record_item_id": item_id,
+                "paper_identifier": paper_identifier,
+                f"{checklist_name}_{paper_identifier}": item_id,
                 "validate_result": compliance,
                 "Reason": f"Failed to parse result: {result[:500]}..."
             }
@@ -310,9 +322,13 @@ class ClaudeValidator:
             return validation
         except Exception as e:
             self.logger.error(f"Error calling Claude API: {e}")
+            
+            # Get the checklist name from the class or use a default
+            checklist_name = getattr(self, 'checklist_name', 'RECORD')
+            
             validation = {
-                "pubmed_id": pubmed_id,
-                "record_item_id": item_id,
+                "paper_identifier": paper_identifier,
+                f"{checklist_name}_{paper_identifier}": item_id,
                 "validate_result": "unknown",
                 "Reason": f"Error: {str(e)}"
             }
@@ -328,12 +344,26 @@ class ClaudeValidator:
         """
         self.logger.info("Calculating overall validation metrics")
         
-        # Count compliance categories
-        counts = {"yes": 0, "partial": 0, "no": 0, "unknown": 0}
+        # Count validation result categories
+        counts = {
+            "agree with extractor": 0, 
+            "do not agree with extractor": 0, 
+            "unknown": 0
+        }
+        
+        # Also track the original compliance values from the extractor
+        extractor_compliance = {"yes": 0, "partial": 0, "no": 0, "unknown": 0}
         
         for item_id, result in validation_results.items():
-            compliance = result.get("validate_result", "unknown")
-            counts[compliance] = counts.get(compliance, 0) + 1
+            # Get the validation result
+            validate_result = result.get("validate_result", "unknown")
+            counts[validate_result] = counts.get(validate_result, 0) + 1
+            
+            # Try to get the original compliance from the extraction
+            # This might be in a nested structure
+            if "extracted_content" in result:
+                compliance = result["extracted_content"].get("compliance", "unknown")
+                extractor_compliance[compliance] = extractor_compliance.get(compliance, 0) + 1
         
         # Calculate percentages
         total_items = len(validation_results)
@@ -343,23 +373,21 @@ class ClaudeValidator:
             for category, count in counts.items():
                 percentages[f"{category}_percent"] = (count / total_items) * 100
         
-        # Calculate overall compliance rate (full and partial)
+        # Calculate agreement rate
         if total_items > 0:
-            compliance_rate = ((counts["yes"] + (counts["partial"] * 0.5)) / total_items) * 100
+            agreement_rate = (counts["agree with extractor"] / total_items) * 100
         else:
-            compliance_rate = 0.0
+            agreement_rate = 0.0
         
         # Compile metrics
         metrics = {
             "total_items": total_items,
-            "fully_compliant": counts["yes"],
-            "partially_compliant": counts["partial"],
-            "non_compliant": counts["no"],
+            "agree_with_extractor": counts["agree with extractor"],
+            "disagree_with_extractor": counts["do not agree with extractor"],
             "unknown": counts["unknown"],
-            "compliance_rate": compliance_rate,
-            "average_confidence": 0.0,  # Not calculated for this simplified version
-            "items_for_review": 0,  # Not calculated for this simplified version
-            "review_percentage": 0.0  # Not calculated for this simplified version
+            "agreement_rate": agreement_rate,
+            "items_for_review": counts["do not agree with extractor"],  # Items where validator disagrees with extractor
+            "review_percentage": (counts["do not agree with extractor"] / total_items * 100) if total_items > 0 else 0.0
         }
         
         # Add percentages
@@ -462,12 +490,16 @@ class OpenAIClaudeValidationFramework:
         # Get all item IDs
         item_ids = list(guideline_prompts["prompts"].keys())
         
+        # Set the checklist name in the extractor based on the guideline type
+        guideline_type = guideline_prompts.get("guideline_type", "RECORD")
+        self.extractor.checklist_name = guideline_type
+        
         # Process items in batches
         for i in range(0, len(item_ids), batch_size):
             batch_item_ids = item_ids[i:i+batch_size]
             self.logger.info(f"Processing batch {i//batch_size + 1}/{(len(item_ids) + batch_size - 1)//batch_size}: {batch_item_ids}")
             
-            # Set the paper_path in the extractor so it can extract the pubmed_id
+            # Set the paper_path in the extractor so it can extract the paper identifier
             self.extractor.paper_path = paper_path
             
             for item_id in batch_item_ids:
@@ -477,11 +509,11 @@ class OpenAIClaudeValidationFramework:
             # Save intermediate results after each batch
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             paper_basename = os.path.basename(paper_path)
-            pubmed_id = os.path.splitext(paper_basename)[0]
-            if '.' in pubmed_id:
-                pubmed_id = pubmed_id.split('.')[0]
+            paper_identifier = os.path.splitext(paper_basename)[0]
+            if '.' in paper_identifier:
+                paper_identifier = paper_identifier.split('.')[0]
                 
-            batch_filename = f"{timestamp}_batch_{i//batch_size + 1}_extraction_{pubmed_id}.json"
+            batch_filename = f"{timestamp}_batch_{i//batch_size + 1}_extraction_{paper_identifier}_{guideline_type}.json"
             with open(os.path.join(OUTPUT_PATH, batch_filename), "w") as f:
                 json.dump(extracted_info, f, indent=2)
             
@@ -512,6 +544,10 @@ class OpenAIClaudeValidationFramework:
         # Get all item IDs
         item_ids = list(paper_info["extracted_info"].keys())
         
+        # Set the checklist name in the validator based on the guideline type
+        guideline_type = guideline_info.get("guideline_type", "RECORD")
+        self.validator.checklist_name = guideline_type
+        
         # Process items in batches
         for i in range(0, len(item_ids), batch_size):
             batch_item_ids = item_ids[i:i+batch_size]
@@ -536,11 +572,11 @@ class OpenAIClaudeValidationFramework:
             # Save intermediate results after each batch
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             paper_basename = os.path.basename(paper_info["paper_path"])
-            pubmed_id = os.path.splitext(paper_basename)[0]
-            if '.' in pubmed_id:
-                pubmed_id = pubmed_id.split('.')[0]
+            paper_identifier = os.path.splitext(paper_basename)[0]
+            if '.' in paper_identifier:
+                paper_identifier = paper_identifier.split('.')[0]
                 
-            batch_filename = f"{timestamp}_batch_{i//batch_size + 1}_validation_{pubmed_id}.json"
+            batch_filename = f"{timestamp}_batch_{i//batch_size + 1}_validation_{paper_identifier}_{guideline_type}.json"
             with open(os.path.join(OUTPUT_PATH, batch_filename), "w") as f:
                 json.dump(validation_results, f, indent=2)
             
@@ -562,7 +598,7 @@ class OpenAIClaudeValidationFramework:
         
         report = {
             "paper": paper_name,
-            "guideline": guideline_info["guideline_type"],
+            "checklist": guideline_info["guideline_type"],
             "validation_summary": validation_results["metrics"],
             "items": {}
         }
@@ -582,7 +618,6 @@ class OpenAIClaudeValidationFramework:
             report["items"][item_id] = {
                 "description": guideline_item["description"] if guideline_item else "Unknown",
                 "compliance": validation.get("validate_result", "unknown"),
-                "confidence": extracted_content.get("confidence", 0.0),
                 "evidence": evidence,
                 "correct_answer": correct_answer,
                 "reasoning": validation.get("Reason", ""),
@@ -598,43 +633,46 @@ class OpenAIClaudeValidationFramework:
         # Get current timestamp
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        # Extract PubMed ID from the paper filename
+        # Extract paper identifier from the paper filename
         paper_basename = os.path.basename(paper_path)
-        pubmed_id = os.path.splitext(paper_basename)[0]
+        paper_identifier = os.path.splitext(paper_basename)[0]
         
         # If the filename contains a dot (e.g., "34923518.2022.something.pdf"), 
-        # extract just the PubMed ID part
-        if '.' in pubmed_id:
-            pubmed_id = pubmed_id.split('.')[0]
+        # extract just the paper identifier part
+        if '.' in paper_identifier:
+            paper_identifier = paper_identifier.split('.')[0]
+        
+        # Get the checklist name
+        checklist_name = guideline_info.get("guideline_type", "RECORD")
         
         # Save guideline prompts (LLM1-reasoner)
-        reasoner_filename = f"{timestamp}_openai_reasoner_{pubmed_id}.json"
+        reasoner_filename = f"{timestamp}_openai_reasoner_{paper_identifier}_{checklist_name}.json"
         with open(os.path.join(OUTPUT_PATH, reasoner_filename), "w") as f:
             json.dump(guideline_info["prompts"], f, indent=2)
         
         # Save LLM1 process log
-        log_filename = f"{timestamp}_openai_reasoner_{pubmed_id}_process_log.txt"
+        log_filename = f"{timestamp}_openai_reasoner_{paper_identifier}_{checklist_name}_process_log.txt"
         with open(os.path.join(OUTPUT_PATH, log_filename), "w") as f:
             f.write(llm1_log_handler.get_logs())
         
         # Save extracted information (LLM2-extractor)
-        extractor_filename = f"{timestamp}_openai-gpt4o_extractor_{pubmed_id}.json"
+        extractor_filename = f"{timestamp}_openai-gpt4o_extractor_{paper_identifier}_{checklist_name}.json"
         with open(os.path.join(OUTPUT_PATH, extractor_filename), "w") as f:
             json.dump(paper_info["extracted_info"], f, indent=2)
         
         # Save validation results (LLM3-validator)
-        validator_filename = f"{timestamp}_claude-sonnet_validator_{pubmed_id}.json"
+        validator_filename = f"{timestamp}_claude-sonnet_validator_{paper_identifier}_{checklist_name}.json"
         with open(os.path.join(OUTPUT_PATH, validator_filename), "w") as f:
             json.dump(validation_results, f, indent=2)
         
         # Save final report
-        report_filename = f"{timestamp}_openai_claude_report_{pubmed_id}.json"
+        report_filename = f"{timestamp}_openai_claude_report_{paper_identifier}_{checklist_name}.json"
         with open(os.path.join(OUTPUT_PATH, report_filename), "w") as f:
             json.dump(final_report, f, indent=2)
         
-        # Generate and save the full RECORD checklist
-        full_record = self._generate_full_record_checklist(final_report)
-        record_filename = f"{timestamp}_full_record_checklist_{pubmed_id}.json"
+        # Generate and save the full checklist
+        full_record = self._generate_full_checklist(final_report)
+        record_filename = f"{timestamp}_full_{guideline_info['guideline_type']}_checklist_{paper_identifier}.json"
         with open(os.path.join(OUTPUT_PATH, record_filename), "w") as f:
             json.dump(full_record, f, indent=2)
         
@@ -644,21 +682,21 @@ class OpenAIClaudeValidationFramework:
         self.logger.info(f"Extractor output: {extractor_filename}")
         self.logger.info(f"Validator output: {validator_filename}")
         self.logger.info(f"Final report: {report_filename}")
-        self.logger.info(f"Full RECORD checklist: {record_filename}")
+        self.logger.info(f"Full {guideline_info['guideline_type']} checklist: {record_filename}")
     
-    def _generate_full_record_checklist(self, final_report):
+    def _generate_full_checklist(self, final_report):
         """
-        Generate a full RECORD checklist from the correct answers in the final report.
+        Generate a full checklist from the correct answers in the final report.
         
         Args:
             final_report: The final report containing all items with their correct answers
             
         Returns:
-            A dictionary containing the full RECORD checklist
+            A dictionary containing the full checklist
         """
         full_record = {
             "paper": final_report.get("paper", ""),
-            "guideline": final_report.get("guideline", ""),
+            "checklist_type": final_report.get("checklist", ""),
             "checklist": {}
         }
         
@@ -674,7 +712,7 @@ class OpenAIClaudeValidationFramework:
         
         return full_record
 
-def load_prompts_from_file(prompts_file):
+def load_prompts_from_file(prompts_file, guideline_type="RECORD"):
     """
     Load prompts from a previously saved file.
     
@@ -691,7 +729,7 @@ def load_prompts_from_file(prompts_file):
     
     # Create a mock guideline_info structure with the loaded prompts
     guideline_info = {
-        "guideline_type": "RECORD",
+        "guideline_type": guideline_type,  # Use the provided guideline_type
         "items": [],  # This will be populated with dummy items based on prompt IDs
         "prompts": prompts
     }
@@ -742,7 +780,7 @@ def run_test(prompts_file=None, config=None, guideline_type="RECORD"):
     # Step 1: Process guidelines or load existing prompts
     if prompts_file:
         # Load prompts from file (LLM1 output)
-        guideline_info = load_prompts_from_file(prompts_file)
+        guideline_info = load_prompts_from_file(prompts_file, guideline_type)
         # Update guideline type if it's different from RECORD
         if guideline_type != "RECORD":
             guideline_info["guideline_type"] = guideline_type
@@ -811,28 +849,28 @@ def run_test(prompts_file=None, config=None, guideline_type="RECORD"):
                 else:
                     print(f"  {metric_name}: {metric_value}")
         
-        # Count compliance by type
+        # Count validation results by type
         if "items" in final_report:
-            compliances = {"yes": 0, "partial": 0, "no": 0, "unknown": 0}
+            validation_counts = {
+                "agree with extractor": 0, 
+                "do not agree with extractor": 0, 
+                "unknown": 0
+            }
             
             for item_id, item_data in final_report["items"].items():
-                compliance = item_data.get("compliance", "unknown")
-                if compliance in compliances:
-                    compliances[compliance] += 1
-                else:
-                    compliances["unknown"] += 1
+                result = item_data.get("compliance", "unknown")
+                validation_counts[result] = validation_counts.get(result, 0) + 1
             
-            print("\nCompliance Summary:")
+            print("\nValidation Results Summary:")
             print(f"  Total Items: {len(final_report['items'])}")
-            print(f"  Compliant: {compliances['yes']} items")
-            print(f"  Partially Compliant: {compliances['partial']} items")
-            print(f"  Non-Compliant: {compliances['no']} items")
-            print(f"  Unknown: {compliances['unknown']} items")
+            print(f"  Agree with Extractor: {validation_counts['agree with extractor']} items")
+            print(f"  Disagree with Extractor: {validation_counts['do not agree with extractor']} items")
+            print(f"  Unknown: {validation_counts['unknown']} items")
             
-            # Calculate compliance rate if we have items
+            # Calculate agreement rate if we have items
             if len(final_report['items']) > 0:
-                compliance_rate = (compliances['yes'] + (compliances['partial'] * 0.5)) / len(final_report['items']) * 100
-                print(f"  Overall Compliance Rate: {compliance_rate:.1f}%")
+                agreement_rate = (validation_counts['agree with extractor'] / len(final_report['items'])) * 100
+                print(f"  Overall Agreement Rate: {agreement_rate:.1f}%")
         
         print("\n" + "="*80)
         
@@ -851,7 +889,7 @@ if __name__ == "__main__":
                       help='Mode to run: full (default), reasoner (LLM1 only), or extractor (LLM2+LLM3 using existing prompts)')
     parser.add_argument('--prompts', type=str, help='Path to prompts file (required for extractor mode)')
     parser.add_argument('--paper', type=str, help='Path to specific paper to process (optional)')
-    parser.add_argument('--guideline', type=str, default='RECORD', help='Guideline type to use (default: RECORD)')
+    parser.add_argument('--checklist', type=str, default='RECORD', help='Checklist type to use (default: RECORD)')
     parser.add_argument('--config', type=str, help='Path to configuration file with model choices')
     
     args = parser.parse_args()
@@ -872,17 +910,17 @@ if __name__ == "__main__":
         
         # Create framework and process guidelines
         framework = OpenAIClaudeValidationFramework(API_KEYS, config)
-        guideline_info = framework.process_guideline(args.guideline)
+        guideline_info = framework.process_guideline(args.checklist)
         
         # Save prompts with timestamp
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        prompts_filename = f"{timestamp}_openai_reasoner_RECORD_prompts.json"
+        prompts_filename = f"{timestamp}_openai_reasoner_{args.checklist}_prompts.json"
         
         with open(os.path.join(OUTPUT_PATH, prompts_filename), "w") as f:
             json.dump(guideline_info["prompts"], f, indent=2)
         
         # Save LLM1 process log
-        log_filename = f"{timestamp}_openai_reasoner_RECORD_process_log.txt"
+        log_filename = f"{timestamp}_openai_reasoner_{args.checklist}_process_log.txt"
         with open(os.path.join(OUTPUT_PATH, log_filename), "w") as f:
             f.write(llm1_log_handler.get_logs())
         
@@ -906,9 +944,9 @@ if __name__ == "__main__":
             sys.exit(1)
         
         # Run the test with the specified prompts file
-        run_test(prompts_file=args.prompts, config=config, guideline_type=args.guideline)
+        run_test(prompts_file=args.prompts, config=config, guideline_type=args.checklist)
         
     else:
         # Run the full pipeline
         logger.info("Running in FULL mode (LLM1 + LLM2 + LLM3)")
-        run_test(config=config, guideline_type=args.guideline)
+        run_test(config=config, guideline_type=args.checklist)

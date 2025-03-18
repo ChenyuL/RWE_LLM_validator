@@ -10,28 +10,30 @@ import base64
 import tempfile
 
 # Define paths
-GUIDELINES_PATH = os.path.join("data", "Guidelines")
+CHECKLISTS_PATH = os.path.join("data", "Guidelines")  # Keeping the folder name for backward compatibility, but using "checklist" in UI
 PAPERS_PATH = os.path.join("data", "Papers")
 OUTPUT_PATH = "output"
 RESULTS_PATH = os.path.join(OUTPUT_PATH, "paper_results")
+PROMPTS_PATH = os.path.join(OUTPUT_PATH, "prompts")  # New folder for organizing prompts
 
 # Define available models
-REASONER_MODELS = ["o3-mini-2025-01-31", "gpt-4o", "gpt-4-turbo"]
-EXTRACTOR_MODELS = ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"]
+REASONER_MODELS = ["o3-mini-2025-01-31", "o1-2024-12-17", "o1-mini-2024-09-12"]
+EXTRACTOR_MODELS = ["gpt-4o", "gpt-4o-mini-2024-07-18", "gpt-4.5-preview-2025-02-27"]
 VALIDATOR_MODELS = ["claude-3-sonnet-20240229", "claude-3-opus-20240229", "claude-3-haiku-20240307"]
 
 # Ensure directories exist
 def ensure_directories():
-    os.makedirs(GUIDELINES_PATH, exist_ok=True)
+    os.makedirs(CHECKLISTS_PATH, exist_ok=True)
     os.makedirs(PAPERS_PATH, exist_ok=True)
     os.makedirs(OUTPUT_PATH, exist_ok=True)
     os.makedirs(RESULTS_PATH, exist_ok=True)
+    os.makedirs(PROMPTS_PATH, exist_ok=True)
 
-# Get list of guideline folders
-def get_guideline_folders():
-    if not os.path.exists(GUIDELINES_PATH):
+# Get list of checklist folders
+def get_checklist_folders():
+    if not os.path.exists(CHECKLISTS_PATH):
         return []
-    return [d for d in os.listdir(GUIDELINES_PATH) if os.path.isdir(os.path.join(GUIDELINES_PATH, d))]
+    return [d for d in os.listdir(CHECKLISTS_PATH) if os.path.isdir(os.path.join(CHECKLISTS_PATH, d))]
 
 # Get list of papers
 def get_papers():
@@ -46,7 +48,7 @@ def get_results():
     return [d for d in os.listdir(RESULTS_PATH) if os.path.isdir(os.path.join(RESULTS_PATH, d))]
 
 # Run validation process
-def run_validation(paper_path, guideline_type, mode="full", reasoner_model="o3-mini-2025-01-31", 
+def run_validation(paper_path, checklist_type, mode="full", reasoner_model="o3-mini-2025-01-31", 
                   extractor_model="gpt-4o", validator_model="claude-3-sonnet-20240229", prompts_file=None):
     # Create a temporary config file
     config = {
@@ -73,7 +75,7 @@ def run_validation(paper_path, guideline_type, mode="full", reasoner_model="o3-m
     if prompts_file:
         cmd.extend(["--prompts", prompts_file])
     
-    cmd.extend(["--paper", paper_path, "--config", "temp_config.json", "--guideline", guideline_type])
+    cmd.extend(["--paper", paper_path, "--config", "temp_config.json", "--checklist", checklist_type])
     
     # Run the command
     try:
@@ -134,46 +136,46 @@ def main():
     
     # Sidebar
     st.sidebar.title("Navigation")
-    page = st.sidebar.radio("Go to", ["Upload Guidelines", "Upload Papers", "Run Validation", "View Results"])
+    page = st.sidebar.radio("Go to", ["Upload Checklists", "Upload Papers", "Run Validation", "View Results"])
     
-    if page == "Upload Guidelines":
-        st.header("Upload Guidelines")
+    if page == "Upload Checklists":
+        st.header("Upload Checklists")
         
-        # Create new guideline folder
-        st.subheader("Create New Guideline Folder")
+        # Create new checklist folder
+        st.subheader("Create New Checklist Folder")
         new_folder = st.text_input("Enter folder name (e.g., RECORD, STROBE, etc.)")
         
         if st.button("Create Folder") and new_folder:
-            folder_path = os.path.join(GUIDELINES_PATH, new_folder)
+            folder_path = os.path.join(CHECKLISTS_PATH, new_folder)
             if os.path.exists(folder_path):
                 st.warning(f"Folder '{new_folder}' already exists!")
             else:
                 os.makedirs(folder_path)
                 st.success(f"Folder '{new_folder}' created successfully!")
         
-        # Upload guideline files
-        st.subheader("Upload Guideline Files")
-        guideline_folders = get_guideline_folders()
+        # Upload checklist files
+        st.subheader("Upload Checklist Files")
+        checklist_folders = get_checklist_folders()
         
-        if not guideline_folders:
-            st.warning("No guideline folders found. Please create a folder first.")
+        if not checklist_folders:
+            st.warning("No checklist folders found. Please create a folder first.")
         else:
-            selected_folder = st.selectbox("Select guideline folder", guideline_folders)
+            selected_folder = st.selectbox("Select checklist folder", checklist_folders)
             uploaded_files = st.file_uploader("Upload PDF files", type="pdf", accept_multiple_files=True)
             
             if uploaded_files and st.button("Upload Files"):
                 for uploaded_file in uploaded_files:
-                    file_path = os.path.join(GUIDELINES_PATH, selected_folder, uploaded_file.name)
+                    file_path = os.path.join(CHECKLISTS_PATH, selected_folder, uploaded_file.name)
                     with open(file_path, "wb") as f:
                         f.write(uploaded_file.getbuffer())
                 st.success(f"{len(uploaded_files)} file(s) uploaded successfully!")
         
-        # Display existing guideline files
-        st.subheader("Existing Guideline Files")
+        # Display existing checklist files
+        st.subheader("Existing Checklist Files")
         
-        if guideline_folders:
-            folder_to_view = st.selectbox("Select folder to view", guideline_folders, key="view_folder")
-            folder_path = os.path.join(GUIDELINES_PATH, folder_to_view)
+        if checklist_folders:
+            folder_to_view = st.selectbox("Select folder to view", checklist_folders, key="view_folder")
+            folder_path = os.path.join(CHECKLISTS_PATH, folder_to_view)
             
             if os.path.exists(folder_path):
                 files = [f for f in os.listdir(folder_path) if f.lower().endswith('.pdf')]
@@ -197,7 +199,7 @@ def main():
         st.header("Upload Papers")
         
         st.markdown("""
-        Upload research papers to validate. Papers should be named with their PubMed ID (e.g., `34923518.pdf`).
+        Upload research papers to validate. Papers should be named with their paper identifier (e.g., `34923518.pdf`).
         """)
         
         uploaded_files = st.file_uploader("Upload PDF papers", type="pdf", accept_multiple_files=True)
@@ -206,7 +208,7 @@ def main():
             for uploaded_file in uploaded_files:
                 file_name = uploaded_file.name
                 
-                # Check if filename is a valid PubMed ID format
+                # Check if filename is a PDF
                 if not file_name.lower().endswith('.pdf'):
                     st.warning(f"File '{file_name}' is not a PDF. Skipping.")
                     continue
@@ -240,17 +242,17 @@ def main():
     elif page == "Run Validation":
         st.header("Run Validation")
         
-        # Get available guidelines and papers
-        guideline_folders = get_guideline_folders()
+        # Get available checklists and papers
+        checklist_folders = get_checklist_folders()
         papers = get_papers()
         
-        if not guideline_folders:
-            st.warning("No guideline folders found. Please upload guidelines first.")
+        if not checklist_folders:
+            st.warning("No checklist folders found. Please upload checklists first.")
         elif not papers:
             st.warning("No papers found. Please upload papers first.")
         else:
-            # Select guideline
-            selected_guideline = st.selectbox("Select guideline", guideline_folders)
+            # Select checklist
+            selected_checklist = st.selectbox("Select checklist", checklist_folders)
             
             # Select paper
             selected_paper = st.selectbox("Select paper", papers)
@@ -278,13 +280,35 @@ def main():
             prompts_file = None
             if selected_mode == "extractor":
                 st.subheader("Select Prompts File")
-                prompts_files = [f for f in os.listdir(OUTPUT_PATH) if f.endswith('_RECORD_prompts.json')]
+                
+                # Create prompts directory if it doesn't exist
+                os.makedirs(PROMPTS_PATH, exist_ok=True)
+                
+                # Look for prompts files in both the output directory and the prompts directory
+                output_prompts = [f for f in os.listdir(OUTPUT_PATH) if f.endswith('_prompts.json')]
+                prompts_dir_files = []
+                if os.path.exists(PROMPTS_PATH):
+                    prompts_dir_files = [f for f in os.listdir(PROMPTS_PATH) if f.endswith('_prompts.json')]
+                
+                all_prompts = output_prompts + prompts_dir_files
+                
+                # Filter prompts by selected checklist if possible
+                checklist_prompts = [f for f in all_prompts if selected_checklist in f]
+                if checklist_prompts:
+                    prompts_files = checklist_prompts
+                else:
+                    prompts_files = all_prompts
                 
                 if not prompts_files:
-                    st.warning("No prompts files found. Please run in 'reasoner' mode first.")
+                    st.warning(f"No prompts files found for {selected_checklist}. Please run in 'reasoner' mode first.")
                 else:
                     selected_prompts_file = st.selectbox("Select prompts file", prompts_files)
-                    prompts_file = os.path.join(OUTPUT_PATH, selected_prompts_file)
+                    
+                    # Determine the path of the selected prompts file
+                    if selected_prompts_file in output_prompts:
+                        prompts_file = os.path.join(OUTPUT_PATH, selected_prompts_file)
+                    else:
+                        prompts_file = os.path.join(PROMPTS_PATH, selected_prompts_file)
             
             # Run validation
             if st.button("Run Validation"):
@@ -293,7 +317,7 @@ def main():
                 with st.spinner("Running validation..."):
                     success = run_validation(
                         paper_path=paper_path,
-                        guideline_type=selected_guideline,
+                        checklist_type=selected_checklist,
                         mode=selected_mode,
                         reasoner_model=reasoner_model,
                         extractor_model=extractor_model,
@@ -302,12 +326,12 @@ def main():
                     )
                 
                 if success:
-                    # Get the PubMed ID from the paper filename
-                    pubmed_id = os.path.splitext(selected_paper)[0]
-                    if '.' in pubmed_id:
-                        pubmed_id = pubmed_id.split('.')[0]
+                    # Get the paper identifier from the paper filename
+                    paper_identifier = os.path.splitext(selected_paper)[0]
+                    if '.' in paper_identifier:
+                        paper_identifier = paper_identifier.split('.')[0]
                     
-                    st.session_state.last_validated_paper = pubmed_id
+                    st.session_state.last_validated_paper = paper_identifier
                     st.success(f"Validation completed for {selected_paper}!")
                     st.markdown(f"[View Results](#View Results)")
     
@@ -336,11 +360,11 @@ def main():
                 files = os.listdir(result_path)
                 
                 # Group files by type
-                reasoner_files = [f for f in files if "openai_reasoner" in f and not f.endswith("_process_log.txt")]
-                extractor_files = [f for f in files if "openai-gpt4o_extractor" in f]
-                validator_files = [f for f in files if "claude-sonnet_validator" in f]
-                report_files = [f for f in files if "openai_claude_report" in f]
-                checklist_files = [f for f in files if "full_record_checklist" in f]
+                reasoner_files = [f for f in files if "reasoner" in f.lower() and not f.endswith("_process_log.txt")]
+                extractor_files = [f for f in files if "extractor" in f.lower()]
+                validator_files = [f for f in files if "validator" in f.lower()]
+                report_files = [f for f in files if "report" in f.lower()]
+                checklist_files = [f for f in files if "checklist" in f.lower() or "full_" in f.lower()]
                 
                 # Sort files by timestamp (newest first)
                 for file_list in [reasoner_files, extractor_files, validator_files, report_files, checklist_files]:
@@ -359,7 +383,7 @@ def main():
                 
                 with tab2:
                     if checklist_files:
-                        st.subheader("RECORD Checklist")
+                        st.subheader("Checklist")
                         checklist_file = os.path.join(result_path, checklist_files[0])
                         
                         # Display as a table
