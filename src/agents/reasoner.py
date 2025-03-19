@@ -61,7 +61,7 @@ class Reasoner:
             self.client = OpenAI(api_key=self.api_keys["openai"])
             
             # Use model from config if provided
-            self.model = self.config.get("openai_model", "gpt-3.5-turbo")
+            self.model = self.config.get("openai_model", "gpt-4o")
             self.logger.info(f"Initialized OpenAI client for Reasoner using model: {self.model}")
         except ImportError:
             self.logger.error("Failed to import OpenAI module")
@@ -79,7 +79,7 @@ class Reasoner:
             self.client = Anthropic(api_key=self.api_keys["anthropic"])
             
             # Use model from config or default to Claude model
-            self.model = self.config.get("anthropic_model", "claude-3-opus-20240229")
+            self.model = self.config.get("anthropic_model", "claude-3-5-sonnet-20241022")
             self.logger.info(f"Initialized Anthropic client for Reasoner using model: {self.model}")
         except ImportError:
             self.logger.error("Failed to import Anthropic module")
@@ -197,7 +197,7 @@ class Reasoner:
             Format each item in the following way:
             
             ITEM ID: [item identifier]
-            DESCRIPTION: [complete description]
+            DESCRIPTION: [complete description,recommendation, or requirement, where to find in the paper]
             CATEGORY: [category/section]
             NOTES: [any additional guidance]
             

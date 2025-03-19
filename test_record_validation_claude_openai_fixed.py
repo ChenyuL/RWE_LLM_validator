@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# test_record_validation_openai_claude_fixed.py
+# test_record_validation_claude_openai_fixed.py
 
 import os
 import json
@@ -23,11 +23,11 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("record_test_openai_claude_fixed.log"),
+        logging.FileHandler("record_test_claude_openai_fixed.log"),
         logging.StreamHandler()
     ]
 )
-logger = logging.getLogger("record_test_openai_claude_fixed")
+logger = logging.getLogger("record_test_claude_openai_fixed")
 
 # Create a custom handler to capture logs for LLM1 process
 class LLM1LogHandler(logging.Handler):
@@ -82,12 +82,12 @@ def get_api_keys_from_env():
 # Get API keys
 API_KEYS = get_api_keys_from_env()
 
-class OpenAIExtractor:
+class ClaudeExtractor:
     """
-    An extractor that uses OpenAI API.
+    An extractor that uses Claude API.
     """
     
-    def __init__(self, api_key, model="gpt-4o"):
+    def __init__(self, api_key, model="claude-3-5-sonnet-20241022"):
         self.api_key = api_key
         self.model = model
         self.logger = logging.getLogger(__name__)
@@ -96,7 +96,7 @@ class OpenAIExtractor:
         """
         Extract information from paper text based on a prompt.
         """
-        from openai import OpenAI
+        from anthropic import Anthropic
         
         self.logger.info(f"Extracting information for checklist item: {item_id}")
         
@@ -114,8 +114,8 @@ class OpenAIExtractor:
         # Get the checklist name from the class or use a default
         checklist_name = getattr(self, 'checklist_name', 'RECORD')
         
-        # Create a prompt for OpenAI
-        openai_prompt = f"""
+        # Create a prompt for Claude
+        claude_prompt = f"""
         {prompt}
         
         PAPER TEXT:
@@ -139,31 +139,27 @@ class OpenAIExtractor:
         }}
         """
         
-        # Call OpenAI API
-        client = OpenAI(api_key=self.api_key)
+        # Call Claude API
+        client = Anthropic(api_key=self.api_key)
         
         try:
-            # Check if the model is an o3 model, which requires max_completion_tokens instead of max_tokens
-            if "o3" in self.model:
-                response = client.chat.completions.create(
-                    model=self.model,
-                    messages=[{"role": "user", "content": openai_prompt}],
-                    temperature=0.2,
-                    max_completion_tokens=2000
-                )
-            else:
-                response = client.chat.completions.create(
-                    model=self.model,
-                    messages=[{"role": "user", "content": openai_prompt}],
-                    temperature=0.2,
-                    max_tokens=2000
-                )
+            response = client.messages.create(
+                model=self.model,
+                max_tokens=2000,
+                temperature=0.2,
+                messages=[{"role": "user", "content": claude_prompt}]
+            )
             
-            result = response.choices[0].message.content
+            result = response.content[0].text
             
             # Try to parse the result as JSON
             try:
                 extraction = json.loads(result)
+                # Add model information to the extraction
+                extraction["model_info"] = {
+                    "extractor": f"claude-{self.model}",
+                    "role": "extractor"
+                }
                 return extraction
             except json.JSONDecodeError:
                 # Try to extract JSON from text
@@ -173,6 +169,11 @@ class OpenAIExtractor:
                     try:
                         extracted_json = json_match.group(1)
                         extraction = json.loads(extracted_json)
+                        # Add model information to the extraction
+                        extraction["model_info"] = {
+                            "extractor": f"claude-{self.model}",
+                            "role": "extractor"
+                        }
                         return extraction
                     except json.JSONDecodeError:
                         pass
@@ -188,10 +189,14 @@ class OpenAIExtractor:
                     "compliance": "unknown",
                     "evidence": [],
                     "reasoning": f"Failed to parse result: {result[:500]}..."
+                },
+                "model_info": {
+                    "extractor": f"claude-{self.model}",
+                    "role": "extractor"
                 }
             }
         except Exception as e:
-            self.logger.error(f"Error calling OpenAI API: {e}")
+            self.logger.error(f"Error calling Claude API: {e}")
             
             # Get the checklist name from the class or use a default
             checklist_name = getattr(self, 'checklist_name', 'RECORD')
@@ -203,15 +208,19 @@ class OpenAIExtractor:
                     "compliance": "unknown",
                     "evidence": [],
                     "reasoning": f"Error: {str(e)}"
+                },
+                "model_info": {
+                    "extractor": f"claude-{self.model}",
+                    "role": "extractor"
                 }
             }
 
-class ClaudeValidator:
+class OpenAIValidator:
     """
-    A validator that uses Claude API.
+    A validator that uses OpenAI API.
     """
     
-    def __init__(self, api_key, model="claude-3-5-sonnet-20241022"):
+    def __init__(self, api_key, model="gpt-4o"):
         self.api_key = api_key
         self.model = model
         self.logger = logging.getLogger(__name__)
@@ -221,7 +230,7 @@ class ClaudeValidator:
         """
         Validate an extraction against a guideline item.
         """
-        from anthropic import Anthropic
+        from openai import OpenAI
         
         self.logger.info(f"Validating extraction for checklist item: {item_id}")
         
@@ -240,7 +249,7 @@ class ClaudeValidator:
         checklist_name = getattr(self, 'checklist_name', 'RECORD')
         
         # Build prompt for validation
-        claude_prompt = f"""
+        openai_prompt = f"""
         You are an expert validator for biomedical research reporting checklists.
         
         CHECKLIST ITEM: {item_id}
@@ -268,22 +277,37 @@ class ClaudeValidator:
         }}
         """
         
-        # Call Claude API
-        client = Anthropic(api_key=self.api_key)
+        # Call OpenAI API
+        client = OpenAI(api_key=self.api_key)
         
         try:
-            response = client.messages.create(
-                model=self.model,
-                max_tokens=2000,
-                temperature=0.1,
-                messages=[{"role": "user", "content": claude_prompt}]
-            )
+            # Check if the model is an o3 model, which requires max_completion_tokens instead of max_tokens
+            if "o3" in self.model:
+                response = client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": openai_prompt}],
+                    temperature=0.1,
+                    max_completion_tokens=2000
+                )
+            else:
+                response = client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": openai_prompt}],
+                    temperature=0.1,
+                    max_tokens=2000
+                )
             
-            result = response.content[0].text
+            result = response.choices[0].message.content
             
             # Try to parse the result as JSON
             try:
                 validation = json.loads(result)
+                
+                # Add model information to the validation
+                validation["model_info"] = {
+                    "validator": f"openai-{self.model}",
+                    "role": "validator"
+                }
                 
                 # Save validation result
                 self.validation_results[item_id] = validation
@@ -297,6 +321,12 @@ class ClaudeValidator:
                     try:
                         extracted_json = json_match.group(1)
                         validation = json.loads(extracted_json)
+                        
+                        # Add model information to the validation
+                        validation["model_info"] = {
+                            "validator": f"openai-{self.model}",
+                            "role": "validator"
+                        }
                         
                         # Save validation result
                         self.validation_results[item_id] = validation
@@ -313,7 +343,11 @@ class ClaudeValidator:
                 "paper_identifier": paper_identifier,
                 f"{checklist_name}_{paper_identifier}": item_id,
                 "validate_result": compliance,
-                "Reason": f"Failed to parse result: {result[:500]}..."
+                "Reason": f"Failed to parse result: {result[:500]}...",
+                "model_info": {
+                    "validator": f"openai-{self.model}",
+                    "role": "validator"
+                }
             }
             
             # Save validation result
@@ -321,7 +355,7 @@ class ClaudeValidator:
             
             return validation
         except Exception as e:
-            self.logger.error(f"Error calling Claude API: {e}")
+            self.logger.error(f"Error calling OpenAI API: {e}")
             
             # Get the checklist name from the class or use a default
             checklist_name = getattr(self, 'checklist_name', 'RECORD')
@@ -330,7 +364,11 @@ class ClaudeValidator:
                 "paper_identifier": paper_identifier,
                 f"{checklist_name}_{paper_identifier}": item_id,
                 "validate_result": "unknown",
-                "Reason": f"Error: {str(e)}"
+                "Reason": f"Error: {str(e)}",
+                "model_info": {
+                    "validator": f"openai-{self.model}",
+                    "role": "validator"
+                }
             }
             
             # Save validation result
@@ -393,11 +431,17 @@ class ClaudeValidator:
         # Add percentages
         metrics.update(percentages)
         
+        # Add model information
+        metrics["model_info"] = {
+            "extractor": f"claude-{self.model}",
+            "validator": f"openai-{self.model}"
+        }
+        
         return metrics
 
-class OpenAIClaudeValidationFramework:
+class ClaudeOpenAIValidationFramework:
     """
-    A modified version of the LLMValidationFramework that uses OpenAI for LLM1 and LLM2, and Claude for LLM3.
+    A modified version of the LLMValidationFramework that uses Claude for LLM1 and LLM2, and OpenAI for LLM3.
     """
     
     def __init__(self, api_keys, config=None):
@@ -422,13 +466,13 @@ class OpenAIClaudeValidationFramework:
         
         # Initialize extractor with the specified model
         extractor_config = self.config.get("extractor", {})
-        extractor_model = extractor_config.get("model", "gpt-4o")
-        self.extractor = OpenAIExtractor(api_keys["openai"], model=extractor_model)
+        extractor_model = extractor_config.get("model", "claude-3-5-sonnet-20241022")
+        self.extractor = ClaudeExtractor(api_keys["anthropic"], model=extractor_model)
         
         # Initialize validator with the specified model
         validator_config = self.config.get("validator", {})
-        validator_model = validator_config.get("model", "claude-3-5-sonnet-20241022")
-        self.validator = ClaudeValidator(api_keys["anthropic"], model=validator_model)
+        validator_model = validator_config.get("model", "gpt-4o")
+        self.validator = OpenAIValidator(api_keys["openai"], model=validator_model)
         
         # Ensure output directory exists
         os.makedirs(OUTPUT_PATH, exist_ok=True)
@@ -596,10 +640,32 @@ class OpenAIClaudeValidationFramework:
         """
         paper_name = os.path.basename(paper_info["paper_path"])
         
+        # Get model information from the first validation result (if available)
+        extractor_model = "claude"
+        validator_model = "openai"
+        
+        # Try to get more specific model information from the validation results
+        if validation_results["validation_results"] and len(validation_results["validation_results"]) > 0:
+            first_item_id = next(iter(validation_results["validation_results"]))
+            first_validation = validation_results["validation_results"][first_item_id]
+            
+            # Get model info from the validation result
+            if "model_info" in first_validation:
+                validator_model = first_validation["model_info"].get("validator", "openai")
+            
+            # Get model info from the extraction
+            first_extraction = paper_info["extracted_info"].get(first_item_id, {})
+            if "model_info" in first_extraction:
+                extractor_model = first_extraction["model_info"].get("extractor", "claude")
+        
         report = {
             "paper": paper_name,
             "checklist": guideline_info["guideline_type"],
             "validation_summary": validation_results["metrics"],
+            "model_info": {
+                "extractor": extractor_model,
+                "validator": validator_model
+            },
             "items": {}
         }
         
@@ -615,13 +681,21 @@ class OpenAIClaudeValidationFramework:
             # Get the correct answer from the validation
             correct_answer = validation.get("correct_answer", validation.get("validate_result", "unknown"))
             
+            # Get model information from the extraction and validation
+            extraction_model_info = extraction.get("model_info", {"extractor": extractor_model, "role": "extractor"})
+            validation_model_info = validation.get("model_info", {"validator": validator_model, "role": "validator"})
+            
             report["items"][item_id] = {
                 "description": guideline_item["description"] if guideline_item else "Unknown",
                 "compliance": validation.get("validate_result", "unknown"),
                 "evidence": evidence,
                 "correct_answer": correct_answer,
                 "reasoning": validation.get("Reason", ""),
-                "disagreements": []  # Not provided in this simplified version
+                "disagreements": [],  # Not provided in this simplified version
+                "model_info": {
+                    "extractor": extraction_model_info.get("extractor", extractor_model),
+                    "validator": validation_model_info.get("validator", validator_model)
+                }
             }
         
         return report
@@ -645,6 +719,10 @@ class OpenAIClaudeValidationFramework:
         # Get the checklist name
         checklist_name = guideline_info.get("guideline_type", "RECORD")
         
+        # Get model information from the final report
+        extractor_model = final_report.get("model_info", {}).get("extractor", "claude")
+        validator_model = final_report.get("model_info", {}).get("validator", "openai")
+        
         # Save guideline prompts (LLM1-reasoner)
         reasoner_filename = f"{timestamp}_openai_reasoner_{paper_identifier}_{checklist_name}.json"
         with open(os.path.join(OUTPUT_PATH, reasoner_filename), "w") as f:
@@ -656,17 +734,17 @@ class OpenAIClaudeValidationFramework:
             f.write(llm1_log_handler.get_logs())
         
         # Save extracted information (LLM2-extractor)
-        extractor_filename = f"{timestamp}_openai-gpt4o_extractor_{paper_identifier}_{checklist_name}.json"
+        extractor_filename = f"{timestamp}_{extractor_model}_extractor_{paper_identifier}_{checklist_name}.json"
         with open(os.path.join(OUTPUT_PATH, extractor_filename), "w") as f:
             json.dump(paper_info["extracted_info"], f, indent=2)
         
         # Save validation results (LLM3-validator)
-        validator_filename = f"{timestamp}_claude-sonnet_validator_{paper_identifier}_{checklist_name}.json"
+        validator_filename = f"{timestamp}_{validator_model}_validator_{paper_identifier}_{checklist_name}.json"
         with open(os.path.join(OUTPUT_PATH, validator_filename), "w") as f:
             json.dump(validation_results, f, indent=2)
         
         # Save final report
-        report_filename = f"{timestamp}_openai_claude_report_{paper_identifier}_{checklist_name}.json"
+        report_filename = f"{timestamp}_claude_openai_report_{paper_identifier}_{checklist_name}.json"
         with open(os.path.join(OUTPUT_PATH, report_filename), "w") as f:
             json.dump(final_report, f, indent=2)
         
@@ -697,17 +775,20 @@ class OpenAIClaudeValidationFramework:
         full_record = {
             "paper": final_report.get("paper", ""),
             "checklist_type": final_report.get("checklist", ""),
-            "checklist": {}
+            "checklist": {},
+            "model_info": final_report.get("model_info", {})  # Include model information
         }
         
         # Extract the correct answers from each item
         for item_id, item_data in final_report.get("items", {}).items():
             correct_answer = item_data.get("correct_answer", "unknown")
             description = item_data.get("description", "")
+            model_info = item_data.get("model_info", {})  # Get model info for this item
             
             full_record["checklist"][item_id] = {
                 "description": description,
-                "answer": correct_answer
+                "answer": correct_answer,
+                "model_info": model_info  # Include model information for each item
             }
         
         return full_record
@@ -774,8 +855,8 @@ def run_test(prompts_file=None, config=None, guideline_type="RECORD"):
     # Create output directory if it doesn't exist
     os.makedirs(OUTPUT_PATH, exist_ok=True)
     
-    logger.info("Initializing OpenAI+Claude LLM Validation Framework")
-    framework = OpenAIClaudeValidationFramework(API_KEYS, config)
+    logger.info("Initializing Claude+OpenAI LLM Validation Framework")
+    framework = ClaudeOpenAIValidationFramework(API_KEYS, config)
     
     # Step 1: Process guidelines or load existing prompts
     if prompts_file:
@@ -790,7 +871,7 @@ def run_test(prompts_file=None, config=None, guideline_type="RECORD"):
         guideline_info = framework.process_guideline(guideline_type)
         
         # Save guideline info for inspection
-        with open(os.path.join(OUTPUT_PATH, "record_guideline_info_openai_claude.json"), "w") as f:
+        with open(os.path.join(OUTPUT_PATH, "record_guideline_info_claude_openai.json"), "w") as f:
             # Convert complex types to strings for JSON serialization
             simplified_info = {
                 "guideline_type": guideline_info["guideline_type"],
@@ -849,6 +930,13 @@ def run_test(prompts_file=None, config=None, guideline_type="RECORD"):
                 else:
                     print(f"  {metric_name}: {metric_value}")
         
+        # Print model information
+        if "model_info" in final_report:
+            model_info = final_report["model_info"]
+            print("\nModel Information:")
+            print(f"  Extractor: {model_info.get('extractor', 'claude')}")
+            print(f"  Validator: {model_info.get('validator', 'openai')}")
+        
         # Count validation results by type
         if "items" in final_report:
             validation_counts = {
@@ -874,7 +962,7 @@ def run_test(prompts_file=None, config=None, guideline_type="RECORD"):
         
         print("\n" + "="*80)
         
-        logger.info(f"Report saved to {os.path.join(OUTPUT_PATH, os.path.basename(paper_path).replace('.pdf', '_report_openai_claude.json'))}")
+        logger.info(f"Report saved to {os.path.join(OUTPUT_PATH, os.path.basename(paper_path).replace('.pdf', '_report_claude_openai.json'))}")
         logger.info("Test completed successfully")
         
     except Exception as e:
@@ -884,7 +972,7 @@ if __name__ == "__main__":
     import argparse
     
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Run RECORD validation with OpenAI and Claude LLMs')
+    parser = argparse.ArgumentParser(description='Run RECORD validation with Claude and OpenAI LLMs')
     parser.add_argument('--mode', choices=['full', 'reasoner', 'extractor'], default='full',
                       help='Mode to run: full (default), reasoner (LLM1 only), or extractor (LLM2+LLM3 using existing prompts)')
     parser.add_argument('--prompts', type=str, help='Path to prompts file (required for extractor mode)')
@@ -909,7 +997,7 @@ if __name__ == "__main__":
         logger.info("Running in REASONER mode (LLM1 only)")
         
         # Create framework and process guidelines
-        framework = OpenAIClaudeValidationFramework(API_KEYS, config)
+        framework = ClaudeOpenAIValidationFramework(API_KEYS, config)
         guideline_info = framework.process_guideline(args.checklist)
         
         # Save prompts with timestamp

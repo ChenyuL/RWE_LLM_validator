@@ -19,7 +19,7 @@ PROMPTS_PATH = os.path.join(OUTPUT_PATH, "prompts")  # New folder for organizing
 # Define available models
 REASONER_MODELS = ["o3-mini-2025-01-31", "o1-2024-12-17", "o1-mini-2024-09-12"]
 EXTRACTOR_MODELS = ["gpt-4o", "gpt-4o-mini-2024-07-18", "gpt-4.5-preview-2025-02-27"]
-VALIDATOR_MODELS = ["claude-3-sonnet-20240229", "claude-3-opus-20240229", "claude-3-haiku-20240307"]
+VALIDATOR_MODELS = ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-haiku-20240307"]
 
 # Ensure directories exist
 def ensure_directories():
@@ -200,7 +200,7 @@ def main():
         
         st.markdown("""
         Upload research papers to validate. Papers should be named with their paper identifier (e.g., `34923518.pdf`).
-        """)
+        You are responsible for copyright compliance when uploading files. We recommend using open access papers or adding only necessary supplements to copyrighted PDFs. Please include any essential supplementary materials with original papers.""")
         
         uploaded_files = st.file_uploader("Upload PDF papers", type="pdf", accept_multiple_files=True)
         

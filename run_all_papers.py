@@ -184,8 +184,10 @@ def main():
     # Run cleanup script
     print("\nRunning cleanup script...")
     try:
-        subprocess.run(["./cleanup_output.sh"], check=True)
-        print("Cleanup completed successfully.")
+        # Redirect cleanup script output to a log file
+        with open("cleanup_output.log", "w") as log_file:
+            subprocess.run(["./cleanup_output.sh"], check=True, stdout=log_file, stderr=log_file)
+        print("Cleanup completed successfully. See cleanup_output.log for details.")
     except subprocess.CalledProcessError as e:
         print(f"Error running cleanup script: {e}")
     except FileNotFoundError:

@@ -1,0 +1,24 @@
+{
+  "timestamp": "20250318_142504",
+  "total_papers_tested": 3,
+  "papers_with_100_percent_agreement": 1,
+  "papers_needing_review": 2,
+  "papers_for_review": [
+    {
+      "paper": "31537841.pdf",
+      "agreement_percent": 97.14285714285714,
+      "disagreement_item": 30,
+      "report_file": "20250318_141654_openai_claude_report_31537841_Li-Paper.json",
+      "extractor_assessment": "compliant",
+      "validator_assessment": "The paper does not explicitly state compliance with a specific reporting guideline item 30. The evidence only mentions ethical approval and adherence to general ethical standards, but does not confirm compliance with the details likely required for this checklist item."
+    },
+    {
+      "paper": "24972918.pdf",
+      "agreement_percent": 97.14285714285714,
+      "disagreement_item": 26,
+      "report_file": "20250318_142232_openai_claude_report_24972918_Li-Paper.json",
+      "extractor_assessment": "compliant",
+      "validator_assessment": "The paper does not provide sufficient information to fully address Li-Paper SOP item 26, which likely requires a detailed description of the study design, statistical methods, and other key elements for reporting biomedical research. The provided evidence only mentions ethical approval and data collection, but does not cover the specific requirements of this checklist item."
+    }
+  ]
+}
