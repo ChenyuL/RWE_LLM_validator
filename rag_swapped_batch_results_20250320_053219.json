@@ -1,0 +1,152 @@
+[
+  {
+    "paper_id": "24972918",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 24972918.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 21\n  disagree_with_extractor: 7\n  unknown: 7\n  agreement_rate: 60.000\n  items_for_review: 7\n  review_percentage: 20.000\n  agree with extractor_percent: 60.000\n  do not agree with extractor_percent: 20.000\n  unknown_percent: 20.000\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "28472213",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 28472213.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 19\n  disagree_with_extractor: 10\n  unknown: 6\n  agreement_rate: 54.286\n  items_for_review: 10\n  review_percentage: 28.571\n  agree with extractor_percent: 54.286\n  do not agree with extractor_percent: 28.571\n  unknown_percent: 17.143\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "31405419",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 31405419.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 19\n  disagree_with_extractor: 7\n  unknown: 9\n  agreement_rate: 54.286\n  items_for_review: 7\n  review_percentage: 20.000\n  agree with extractor_percent: 54.286\n  do not agree with extractor_percent: 20.000\n  unknown_percent: 25.714\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "30618280",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 30618280.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 23\n  disagree_with_extractor: 6\n  unknown: 6\n  agreement_rate: 65.714\n  items_for_review: 6\n  review_percentage: 17.143\n  agree with extractor_percent: 65.714\n  do not agree with extractor_percent: 17.143\n  unknown_percent: 17.143\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "32925614",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 32925614.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 21\n  disagree_with_extractor: 10\n  unknown: 4\n  agreement_rate: 60.000\n  items_for_review: 10\n  review_percentage: 28.571\n  agree with extractor_percent: 60.000\n  do not agree with extractor_percent: 28.571\n  unknown_percent: 11.429\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "34338412",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 34338412.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 25\n  disagree_with_extractor: 6\n  unknown: 4\n  agreement_rate: 71.429\n  items_for_review: 6\n  review_percentage: 17.143\n  agree with extractor_percent: 71.429\n  do not agree with extractor_percent: 17.143\n  unknown_percent: 11.429\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "32833926",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 32833926.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 19\n  disagree_with_extractor: 12\n  unknown: 4\n  agreement_rate: 54.286\n  items_for_review: 12\n  review_percentage: 34.286\n  agree with extractor_percent: 54.286\n  do not agree with extractor_percent: 34.286\n  unknown_percent: 11.429\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "23238659",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 23238659.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 21\n  disagree_with_extractor: 9\n  unknown: 5\n  agreement_rate: 60.000\n  items_for_review: 9\n  review_percentage: 25.714\n  agree with extractor_percent: 60.000\n  do not agree with extractor_percent: 25.714\n  unknown_percent: 14.286\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "34831722",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 34831722.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 26\n  disagree_with_extractor: 5\n  unknown: 4\n  agreement_rate: 74.286\n  items_for_review: 5\n  review_percentage: 14.286\n  agree with extractor_percent: 74.286\n  do not agree with extractor_percent: 14.286\n  unknown_percent: 11.429\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "28886989",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 28886989.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 22\n  disagree_with_extractor: 7\n  unknown: 6\n  agreement_rate: 62.857\n  items_for_review: 7\n  review_percentage: 20.000\n  agree with extractor_percent: 62.857\n  do not agree with extractor_percent: 20.000\n  unknown_percent: 17.143\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "32069337",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 32069337.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 24\n  disagree_with_extractor: 3\n  unknown: 8\n  agreement_rate: 68.571\n  items_for_review: 3\n  review_percentage: 8.571\n  agree with extractor_percent: 68.571\n  do not agree with extractor_percent: 8.571\n  unknown_percent: 22.857\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "34348869",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 34348869.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 22\n  disagree_with_extractor: 9\n  unknown: 4\n  agreement_rate: 62.857\n  items_for_review: 9\n  review_percentage: 25.714\n  agree with extractor_percent: 62.857\n  do not agree with extractor_percent: 25.714\n  unknown_percent: 11.429\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "28122760",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 28122760.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 27\n  disagree_with_extractor: 3\n  unknown: 5\n  agreement_rate: 77.143\n  items_for_review: 3\n  review_percentage: 8.571\n  agree with extractor_percent: 77.143\n  do not agree with extractor_percent: 8.571\n  unknown_percent: 14.286\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "28475259",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 28475259.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 17\n  disagree_with_extractor: 12\n  unknown: 6\n  agreement_rate: 48.571\n  items_for_review: 12\n  review_percentage: 34.286\n  agree with extractor_percent: 48.571\n  do not agree with extractor_percent: 34.286\n  unknown_percent: 17.143\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "32591734",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 32591734.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 25\n  disagree_with_extractor: 7\n  unknown: 3\n  agreement_rate: 71.429\n  items_for_review: 7\n  review_percentage: 20.000\n  agree with extractor_percent: 71.429\n  do not agree with extractor_percent: 20.000\n  unknown_percent: 8.571\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "32964371",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 32964371.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 22\n  disagree_with_extractor: 8\n  unknown: 5\n  agreement_rate: 62.857\n  items_for_review: 8\n  review_percentage: 22.857\n  agree with extractor_percent: 62.857\n  do not agree with extractor_percent: 22.857\n  unknown_percent: 14.286\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "23811246",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 23811246.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 21\n  disagree_with_extractor: 10\n  unknown: 4\n  agreement_rate: 60.000\n  items_for_review: 10\n  review_percentage: 28.571\n  agree with extractor_percent: 60.000\n  do not agree with extractor_percent: 28.571\n  unknown_percent: 11.429\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "30853444",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 30853444.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 24\n  disagree_with_extractor: 8\n  unknown: 3\n  agreement_rate: 68.571\n  items_for_review: 8\n  review_percentage: 22.857\n  agree with extractor_percent: 68.571\n  do not agree with extractor_percent: 22.857\n  unknown_percent: 8.571\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "35870161",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 35870161.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 24\n  disagree_with_extractor: 9\n  unknown: 2\n  agreement_rate: 68.571\n  items_for_review: 9\n  review_percentage: 25.714\n  agree with extractor_percent: 68.571\n  do not agree with extractor_percent: 25.714\n  unknown_percent: 5.714\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "31537841",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 31537841.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 29\n  disagree_with_extractor: 6\n  unknown: 0\n  agreement_rate: 82.857\n  items_for_review: 6\n  review_percentage: 17.143\n  agree with extractor_percent: 82.857\n  do not agree with extractor_percent: 17.143\n  unknown_percent: 0.000\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "29264632",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 29264632.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 30\n  disagree_with_extractor: 5\n  unknown: 0\n  agreement_rate: 85.714\n  items_for_review: 5\n  review_percentage: 14.286\n  agree with extractor_percent: 85.714\n  do not agree with extractor_percent: 14.286\n  unknown_percent: 0.000\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "20473188",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 20473188.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 30\n  disagree_with_extractor: 5\n  unknown: 0\n  agreement_rate: 85.714\n  items_for_review: 5\n  review_percentage: 14.286\n  agree with extractor_percent: 85.714\n  do not agree with extractor_percent: 14.286\n  unknown_percent: 0.000\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "29539612",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 29539612.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 31\n  disagree_with_extractor: 4\n  unknown: 0\n  agreement_rate: 88.571\n  items_for_review: 4\n  review_percentage: 11.429\n  agree with extractor_percent: 88.571\n  do not agree with extractor_percent: 11.429\n  unknown_percent: 0.000\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "29894495",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 29894495.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 28\n  disagree_with_extractor: 6\n  unknown: 1\n  agreement_rate: 80.000\n  items_for_review: 6\n  review_percentage: 17.143\n  agree with extractor_percent: 80.000\n  do not agree with extractor_percent: 17.143\n  unknown_percent: 2.857\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "28319547",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 28319547.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 28\n  disagree_with_extractor: 6\n  unknown: 1\n  agreement_rate: 80.000\n  items_for_review: 6\n  review_percentage: 17.143\n  agree with extractor_percent: 80.000\n  do not agree with extractor_percent: 17.143\n  unknown_percent: 2.857\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "33175173",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 33175173.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 28\n  disagree_with_extractor: 6\n  unknown: 1\n  agreement_rate: 80.000\n  items_for_review: 6\n  review_percentage: 17.143\n  agree with extractor_percent: 80.000\n  do not agree with extractor_percent: 17.143\n  unknown_percent: 2.857\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "29669697",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 29669697.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 33\n  disagree_with_extractor: 2\n  unknown: 0\n  agreement_rate: 94.286\n  items_for_review: 2\n  review_percentage: 5.714\n  agree with extractor_percent: 94.286\n  do not agree with extractor_percent: 5.714\n  unknown_percent: 0.000\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "32688083",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 32688083.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 30\n  disagree_with_extractor: 4\n  unknown: 1\n  agreement_rate: 85.714\n  items_for_review: 4\n  review_percentage: 11.429\n  agree with extractor_percent: 85.714\n  do not agree with extractor_percent: 11.429\n  unknown_percent: 2.857\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "29305022",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 29305022.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 32\n  disagree_with_extractor: 2\n  unknown: 1\n  agreement_rate: 91.429\n  items_for_review: 2\n  review_percentage: 5.714\n  agree with extractor_percent: 91.429\n  do not agree with extractor_percent: 5.714\n  unknown_percent: 2.857\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  },
+  {
+    "paper_id": "33450821",
+    "success": true,
+    "output": "\n================================================================================\nVALIDATION RESULTS FOR 33450821.pdf\n================================================================================\n\nValidation Metrics:\n  total_items: 35\n  agree_with_extractor: 31\n  disagree_with_extractor: 3\n  unknown: 1\n  agreement_rate: 88.571\n  items_for_review: 3\n  review_percentage: 8.571\n  agree with extractor_percent: 88.571\n  do not agree with extractor_percent: 8.571\n  unknown_percent: 2.857\n\nModel Information:\n  Extractor: rag-claude-claude-3-5-sonnet-20241022\n  Validator: rag-openai-gpt-4o\n\n================================================================================\n"
+  }
+]

@@ -6,6 +6,9 @@ import re
 # Directory containing the report files
 reports_dir = 'output/reports'
 
+# Prompts file path
+prompts_file = '/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/prompts/20250319_220659_openai_reasoner_Li-Paper_prompts.json'
+
 # Output file path
 output_file = 'model_answers_comparison.xlsx'
 
@@ -75,6 +78,27 @@ for filename in report_files:
         # Store correct_answer by extractor type
         results[paper_id][item_id][extractor_type] = correct_answer
 
+# Load prompts to get item descriptions
+print(f"Loading prompts from {prompts_file}")
+try:
+    with open(prompts_file, 'r') as f:
+        prompts = json.load(f)
+    
+    # Extract item descriptions from prompts
+    item_descriptions = {}
+    for item_id, prompt in prompts.items():
+        # Extract description from prompt
+        description_match = re.search(r'DESCRIPTION: (.*?)(\n|\r)', prompt)
+        if description_match:
+            item_descriptions[item_id] = description_match.group(1).strip()
+        else:
+            item_descriptions[item_id] = f"Li-Paper SOP item {item_id}"
+    
+    print(f"Loaded {len(item_descriptions)} item descriptions")
+except Exception as e:
+    print(f"Error loading prompts: {e}")
+    item_descriptions = {}
+
 # Convert results to DataFrame for Excel export
 rows = []
 for paper_id, paper_data in results.items():
@@ -82,10 +106,14 @@ for paper_id, paper_data in results.items():
         openai_answer = item_data.get('openai', '')
         claude_answer = item_data.get('claude', '')
         
+        # Get item description
+        item_name = item_descriptions.get(item_id, f"Li-Paper SOP item {item_id}")
+        
         # Create a row for the DataFrame
         row = {
             'paper_id': paper_id,
             'item_id': item_id,
+            'item_name': item_name,
             'openai_answer': openai_answer,
             'claude_answer': claude_answer,
             'manual_validation': ''  # Empty column for manual validation
