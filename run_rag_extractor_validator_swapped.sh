@@ -39,7 +39,7 @@ fi
 mkdir -p output/embeddings
 
 # Set variables
-PROMPTS_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/prompts/20250319_220659_openai_reasoner_Li-Paper_prompts.json"
+PROMPTS_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/prompts/20250322_144753_openai_reasoner_Li-Paper_prompts.json"
 PAPER_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/data/Papers/34831722.pdf"
 CHECKLIST="Li-Paper"
 BATCH_SIZE=30

@@ -61,7 +61,7 @@ class Reasoner:
             self.client = OpenAI(api_key=self.api_keys["openai"])
             
             # Use model from config if provided
-            self.model = self.config.get("openai_model", "gpt-4o")
+            self.model = self.config.get("openai_model", "o3-mini-2025-01-31") ## change to o3-mini
             self.logger.info(f"Initialized OpenAI client for Reasoner using model: {self.model}")
         except ImportError:
             self.logger.error("Failed to import OpenAI module")
@@ -297,8 +297,8 @@ class Reasoner:
                 The response should include:
                 1. Whether the paper complies with this guideline item (yes, partial, or no)
                 2. Evidence from the paper (direct quotes with locations)
-                3. Your confidence in this assessment (0.0-1.0)
-                4. Reasoning for your assessment
+                3. Reasoning for your assessment
+                4. Treat the item as a question, Correct answer for the item (if applicable)
                 
                 If the information is missing, clearly state that it is not reported in the paper.
                 """

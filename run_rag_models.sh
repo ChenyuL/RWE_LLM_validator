@@ -1,128 +1,115 @@
 #!/bin/bash
-# run_rag_batch_improved.sh
-# Script to run the improved RAG-based batch processing on the sampled papers
+# run_rag_models.sh
+# A robust script for running RAG-based batch processing with different models
 
 # Make the Python scripts executable
 chmod +x rag_extractor_validator_improved.py
 
+# Default values
+PROMPTS_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/prompts/20250322_144753_openai_reasoner_Li-Paper_prompts.json"
+PAPERS_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/paper_results/fixed_sampled_papers.json"
+PAPERS_DIR="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/data/Papers"
+CHECKLIST="Li-Paper"
+MAX_WORKERS=4
+EXTRACTOR_MODEL="gpt-4o"
+EXTRACTOR_PROVIDER="openai"
+VALIDATOR_MODEL="claude-3-5-sonnet-20241022"
+VALIDATOR_PROVIDER="anthropic"
+
+# Function to print usage
+print_usage() {
+    echo "Usage: $0 [options]"
+    echo "Options:"
+    echo "  --prompts FILE             Path to prompts file"
+    echo "  --papers FILE              Path to papers file"
+    echo "  --papers-dir DIR           Directory containing paper PDFs"
+    echo "  --checklist TYPE           Checklist type (default: Li-Paper)"
+    echo "  --max-workers NUM          Maximum number of parallel workers"
+    echo "  --extractor-model MODEL    Model to use for extraction"
+    echo "  --extractor-provider PROV  Provider to use for extraction (openai or anthropic)"
+    echo "  --validator-model MODEL    Model to use for validation"
+    echo "  --validator-provider PROV  Provider to use for validation (openai or anthropic)"
+    echo "  --help                     Display this help message"
+}
+
+# Parse command line arguments
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --prompts)
+            PROMPTS_FILE="$2"
+            shift 2
+            ;;
+        --papers)
+            PAPERS_FILE="$2"
+            shift 2
+            ;;
+        --papers-dir)
+            PAPERS_DIR="$2"
+            shift 2
+            ;;
+        --checklist)
+            CHECKLIST="$2"
+            shift 2
+            ;;
+        --max-workers)
+            MAX_WORKERS="$2"
+            shift 2
+            ;;
+        --extractor-model)
+            EXTRACTOR_MODEL="$2"
+            shift 2
+            ;;
+        --extractor-provider)
+            EXTRACTOR_PROVIDER="$2"
+            shift 2
+            ;;
+        --validator-model)
+            VALIDATOR_MODEL="$2"
+            shift 2
+            ;;
+        --validator-provider)
+            VALIDATOR_PROVIDER="$2"
+            shift 2
+            ;;
+        --help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
 # Check if required packages are installed
-if ! python -c "import PyPDF2" &> /dev/null; then
-    echo "Installing PyPDF2..."
-    pip install PyPDF2
-fi
-
-if ! python -c "import numpy" &> /dev/null; then
-    echo "Installing numpy..."
-    pip install numpy
-fi
-
-if ! python -c "import tqdm" &> /dev/null; then
-    echo "Installing tqdm..."
-    pip install tqdm
-fi
-
-if ! python -c "import openai" &> /dev/null; then
-    echo "Installing openai..."
-    pip install openai
-fi
-
-if ! python -c "import anthropic" &> /dev/null; then
-    echo "Installing anthropic..."
-    pip install anthropic
-fi
-
-if ! python -c "import voyageai" &> /dev/null; then
-    echo "Installing voyageai..."
-    pip install voyageai
-fi
+echo "Checking required packages..."
+for package in PyPDF2 numpy tqdm openai anthropic voyageai; do
+    if ! python -c "import $package" &> /dev/null; then
+        echo "Installing $package..."
+        pip install $package
+    fi
+done
 
 # Create output directories
 mkdir -p output/embeddings
 
-# Default values
-DEFAULT_PROMPTS_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/prompts/20250322_144753_openai_reasoner_Li-Paper_prompts.json"
-DEFAULT_PAPERS_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/paper_results/fixed_sampled_papers.json"
-DEFAULT_PAPERS_DIR="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/data/Papers"
-DEFAULT_CHECKLIST="Li-Paper"
-DEFAULT_MAX_WORKERS=10  # Lower default for sequential processing of items
-DEFAULT_EXTRACTOR_MODEL="gpt-4o"
-DEFAULT_EXTRACTOR_PROVIDER="openai"
-DEFAULT_VALIDATOR_MODEL="claude-3-5-sonnet-20241022"
-DEFAULT_VALIDATOR_PROVIDER="anthropic"
+# Display configuration
+echo "Configuration:"
+echo "  Prompts file: $PROMPTS_FILE"
+echo "  Papers file: $PAPERS_FILE"
+echo "  Papers directory: $PAPERS_DIR"
+echo "  Checklist: $CHECKLIST"
+echo "  Max workers: $MAX_WORKERS"
+echo "  Extractor model: $EXTRACTOR_MODEL (provider: $EXTRACTOR_PROVIDER)"
+echo "  Validator model: $VALIDATOR_MODEL (provider: $VALIDATOR_PROVIDER)"
 
-# Parse command line arguments
-PROMPTS_FILE=$DEFAULT_PROMPTS_FILE
-PAPERS_FILE=$DEFAULT_PAPERS_FILE
-PAPERS_DIR=$DEFAULT_PAPERS_DIR
-CHECKLIST=$DEFAULT_CHECKLIST
-MAX_WORKERS=$DEFAULT_MAX_WORKERS
-EXTRACTOR_MODEL=$DEFAULT_EXTRACTOR_MODEL
-EXTRACTOR_PROVIDER=$DEFAULT_EXTRACTOR_PROVIDER
-VALIDATOR_MODEL=$DEFAULT_VALIDATOR_MODEL
-VALIDATOR_PROVIDER=$DEFAULT_VALIDATOR_PROVIDER
-
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-  key="$1"
-  
-  case $key in
-    --prompts)
-      PROMPTS_FILE="$2"
-      shift 2
-      ;;
-    --papers)
-      PAPERS_FILE="$2"
-      shift 2
-      ;;
-    --papers-dir)
-      PAPERS_DIR="$2"
-      shift 2
-      ;;
-    --checklist)
-      CHECKLIST="$2"
-      shift 2
-      ;;
-    --max-workers)
-      MAX_WORKERS="$2"
-      shift 2
-      ;;
-    --extractor-model)
-      EXTRACTOR_MODEL="$2"
-      shift 2
-      ;;
-    --extractor-provider)
-      EXTRACTOR_PROVIDER="$2"
-      shift 2
-      ;;
-    --validator-model)
-      VALIDATOR_MODEL="$2"
-      shift 2
-      ;;
-    --validator-provider)
-      VALIDATOR_PROVIDER="$2"
-      shift 2
-      ;;
-    *)
-      echo "Unknown option: $key"
-      echo "Usage: $0 --prompts <file> --papers <file> [--papers-dir <dir>] [--checklist <type>] [--max-workers <num>] [--extractor-model <model>] [--extractor-provider <provider>] [--validator-model <model>] [--validator-provider <provider>]"
-      exit 1
-      ;;
-  esac
-done
-
-echo "Using prompts file: $PROMPTS_FILE"
-echo "Using papers file: $PAPERS_FILE"
-echo "Using papers directory: $PAPERS_DIR"
-echo "Using checklist: $CHECKLIST"
-echo "Using max workers: $MAX_WORKERS"
-echo "Using extractor model: $EXTRACTOR_MODEL (provider: $EXTRACTOR_PROVIDER)"
-echo "Using validator model: $VALIDATOR_MODEL (provider: $VALIDATOR_PROVIDER)"
-
-# Create a batch processing script for the improved RAG extractor/validator
-cat > run_rag_batch_improved.py << 'EOF'
+# Create a Python script for batch processing
+cat > run_rag_models.py << 'EOF'
 #!/usr/bin/env python
-# run_rag_batch_improved.py
-# Script to run the improved RAG-based extractor and validator on multiple papers
+# run_rag_models.py
+# Script to run the RAG-based extractor and validator on multiple papers
 
 import os
 import json
@@ -138,15 +125,15 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("rag_batch_improved.log"),
+        logging.FileHandler("rag_models.log"),
         logging.StreamHandler()
     ]
 )
-logger = logging.getLogger("rag_batch_improved")
+logger = logging.getLogger("rag_models")
 
 def process_paper(paper_path, prompts_file, checklist, extractor_model, extractor_provider, validator_model, validator_provider):
     """
-    Process a single paper using the improved RAG-based extractor and validator.
+    Process a single paper using the RAG-based extractor and validator.
     """
     paper_id = os.path.splitext(os.path.basename(paper_path))[0]
     logger.info(f"Processing paper: {paper_id}")
@@ -183,9 +170,9 @@ def process_paper(paper_path, prompts_file, checklist, extractor_model, extracto
 
 def main():
     """
-    Main function to run the improved RAG-based extractor and validator on multiple papers.
+    Main function to run the RAG-based extractor and validator on multiple papers.
     """
-    parser = argparse.ArgumentParser(description='Run improved RAG-based extractor and validator on multiple papers')
+    parser = argparse.ArgumentParser(description='Run RAG-based extractor and validator on multiple papers')
     parser.add_argument('--papers', type=str, required=True, help='Path to JSON file with list of paper IDs or directory containing papers')
     parser.add_argument('--prompts', type=str, required=True, help='Path to prompts file')
     parser.add_argument('--checklist', type=str, default='Li-Paper', help='Checklist type (default: Li-Paper)')
@@ -276,7 +263,8 @@ def main():
             results.append(result)
     
     # Save results
-    output_file = f"rag_improved_batch_results_{time.strftime('%Y%m%d_%H%M%S')}.json"
+    timestamp = time.strftime('%Y%m%d_%H%M%S')
+    output_file = f"rag_models_results_{timestamp}.json"
     with open(output_file, 'w') as f:
         json.dump(results, f, indent=2)
     
@@ -299,11 +287,11 @@ if __name__ == "__main__":
 EOF
 
 # Make the Python script executable
-chmod +x run_rag_batch_improved.py
+chmod +x run_rag_models.py
 
-# Run the improved RAG-based batch processing
-echo "Running improved RAG-based batch processing..."
-python run_rag_batch_improved.py \
+# Run the RAG-based batch processing
+echo "Running RAG-based batch processing with custom models..."
+python run_rag_models.py \
     --papers "$PAPERS_FILE" \
     --prompts "$PROMPTS_FILE" \
     --checklist "$CHECKLIST" \

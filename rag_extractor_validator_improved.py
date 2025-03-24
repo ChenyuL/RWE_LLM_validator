@@ -555,6 +555,9 @@ def process_paper_with_rag_improved(paper_path, guideline_info,
     if extractor_provider == "openai":
         rag_extractor = RAGExtractor(API_KEYS["openai"], extractor_model, extractor_provider)
     elif extractor_provider == "anthropic":
+        # Ensure Claude model name is lowercase for Anthropic
+        if extractor_model.startswith("Claude-"):
+            extractor_model = extractor_model.replace("Claude-", "claude-")
         rag_extractor = RAGExtractor(API_KEYS["anthropic"], extractor_model, extractor_provider)
     else:
         logger.error(f"Unsupported extractor provider: {extractor_provider}")
@@ -563,7 +566,7 @@ def process_paper_with_rag_improved(paper_path, guideline_info,
     if validator_provider == "openai":
         rag_validator = RAGValidator(API_KEYS["openai"], validator_model, validator_provider)
     elif validator_provider == "anthropic":
-        # Ensure Claude model name is lowercase
+        # Ensure Claude model name is lowercase for Anthropic
         if validator_model.startswith("Claude-"):
             validator_model = validator_model.replace("Claude-", "claude-")
         rag_validator = RAGValidator(API_KEYS["anthropic"], validator_model, validator_provider)
@@ -656,8 +659,8 @@ def process_paper_with_rag_improved(paper_path, guideline_info,
         }
     
     # Save final report
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_filename = f"{timestamp}_rag_improved_report_{paper_id}_{guideline_info['guideline_type']}.json"
+    timestamp = datetime.datetime.now().strftime("%Y%m%d")
+    report_filename = f"{timestamp}_{rag_extractor.model}_{rag_validator.model}_rag_improved_report_{paper_id}_{guideline_info['guideline_type']}.json"
     with open(os.path.join(OUTPUT_PATH, report_filename), "w") as f:
         json.dump(report, f, indent=2)
     
