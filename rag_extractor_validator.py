@@ -175,7 +175,7 @@ class RAGExtractor:
         # Generate embedding for the prompt
         prompt_embedding = self.client.embeddings.create(
             model="text-embedding-3-small",
-            input=prompt,
+            input=prompt, # should be the paper pdf text 
             dimensions=1536
         ).data[0].embedding
         
@@ -207,7 +207,7 @@ class RAGExtractor:
         Please provide your extraction in the following JSON format:
         {{
             "paper_identifier": "{paper_id}",
-            "Li-Paper_{paper_id}": "{item_id}",
+            "Li-Paper_item_id": "{item_id}",
             "extracted_content": {{
                 "compliance": "yes", "partial", "no", or "unknown",
                 "evidence": [

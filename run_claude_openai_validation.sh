@@ -24,7 +24,7 @@ echo "Processing papers from fixed_sampled_papers.json using Claude as extractor
 PAPERS=$(python -c "import json; print('\n'.join(json.load(open('output/paper_results/fixed_sampled_papers.json'))))")
 
 # Prompt file path
-PROMPT_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/prompts/20250319_123039_openai_reasoner_Li-Paper_prompts.json"
+PROMPT_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/prompts/20250322_144753_openai_reasoner_Li-Paper_prompts.json"
 
 # Copy the fixed_sampled_papers.json to the new output directory
 cp output/paper_results/fixed_sampled_papers.json "$OUTPUT_DIR/"

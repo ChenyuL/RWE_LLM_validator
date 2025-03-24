@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-# rag_extractor_validator_swapped.py
-# RAG-based extractor and validator for Li-Paper SOP with swapped models
-# Extractor: Claude, Validator: OpenAI
+# rag_extractor_validator_fixed.py
+# RAG-based extractor and validator for Li-Paper SOP with updated embedding approach
 
 import os
 import json
@@ -10,6 +9,7 @@ import sys
 import datetime
 import time
 import re
+import requests
 from pathlib import Path
 import numpy as np
 from tqdm import tqdm
@@ -19,11 +19,11 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("rag_extractor_validator_swapped.log"),
+        logging.FileHandler("rag_extractor_validator_fixed.log"),
         logging.StreamHandler()
     ]
 )
-logger = logging.getLogger("rag_extractor_validator_swapped")
+logger = logging.getLogger("rag_extractor_validator_fixed")
 
 # Add project root to path
 project_root = Path(__file__).resolve().parent
@@ -58,12 +58,16 @@ def get_api_keys_from_env():
                 api_keys["openai"] = line.split('=', 1)[1].strip()
             elif line.startswith('ANTHROPIC_API_KEY='):
                 api_keys["anthropic"] = line.split('=', 1)[1].strip()
+            elif line.startswith('VOYAGE_API_KEY='):
+                api_keys["voyage"] = line.split('=', 1)[1].strip()
             elif line.startswith('DEEPSEEK_API_KEY='):
                 api_keys["deepseek"] = line.split('=', 1)[1].strip()
         
         logger.info(f"API keys loaded directly from .env file")
         logger.info(f"OpenAI API Key (first 10 chars): {api_keys['openai'][:10]}...")
         logger.info(f"Anthropic API Key (first 10 chars): {api_keys['anthropic'][:10]}...")
+        if "voyage" in api_keys:
+            logger.info(f"Voyage API Key (first 10 chars): {api_keys['voyage'][:10]}...")
         
         return api_keys
     except Exception as e:
@@ -119,14 +123,14 @@ class PDFProcessor:
             
         return chunks
 
-class EmbeddingGenerator:
+class OpenAIEmbeddingGenerator:
     """
     Generate embeddings for text chunks using OpenAI's API.
     """
     def __init__(self, api_key, model="text-embedding-3-small"):
         self.api_key = api_key
         self.model = model
-        logger.info(f"Initializing embedding generator with model: {model}")
+        logger.info(f"Initializing OpenAI embedding generator with model: {model}")
         
         from openai import OpenAI
         self.client = OpenAI(api_key=self.api_key)
@@ -139,7 +143,7 @@ class EmbeddingGenerator:
             return []
             
         embeddings = []
-        for chunk in tqdm(chunks, desc="Generating embeddings"):
+        for chunk in tqdm(chunks, desc="Generating OpenAI embeddings"):
             try:
                 response = self.client.embeddings.create(
                     model=self.model,
@@ -150,22 +154,74 @@ class EmbeddingGenerator:
                 embeddings.append(embedding)
                 time.sleep(0.1)  # Rate limiting
             except Exception as e:
-                logger.error(f"Error generating embedding: {e}")
+                logger.error(f"Error generating OpenAI embedding: {e}")
                 embeddings.append([0] * 1536)  # Placeholder for failed embedding
                 
         return embeddings
 
-class RAGExtractorClaude:
+class VoyageEmbeddingGenerator:
     """
-    RAG-based extractor that uses Claude to extract information.
+    Generate embeddings for text chunks using Voyage AI's API.
     """
-    def __init__(self, api_key, model="claude-3-5-sonnet-20241022"):
+    def __init__(self, api_key, model="voyage-2"):
         self.api_key = api_key
         self.model = model
-        logger.info(f"Initializing RAG extractor with Claude model: {model}")
+        logger.info(f"Initializing Voyage embedding generator with model: {model}")
+    
+    def generate_embeddings(self, chunks):
+        """
+        Generate embeddings for a list of text chunks.
+        """
+        if not chunks:
+            return []
+            
+        embeddings = []
+        batch_size = 10  # Process in batches to avoid rate limits
         
-        from anthropic import Anthropic
-        self.client = Anthropic(api_key=self.api_key)
+        for i in range(0, len(chunks), batch_size):
+            batch_chunks = chunks[i:i+batch_size]
+            try:
+                response = requests.post(
+                    "https://api.voyageai.com/v1/embeddings",
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {self.api_key}"
+                    },
+                    json={
+                        "model": self.model,
+                        "input": batch_chunks,
+                        "truncation": True  # Handle long inputs
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    batch_embeddings = [item["embedding"] for item in data["data"]]
+                    embeddings.extend(batch_embeddings)
+                else:
+                    logger.error(f"Error generating Voyage embeddings: {response.text}")
+                    # Add placeholder embeddings for the batch
+                    embeddings.extend([[0] * 1024] * len(batch_chunks))
+                
+                time.sleep(0.5)  # Rate limiting
+            except Exception as e:
+                logger.error(f"Error generating Voyage embedding: {e}")
+                # Add placeholder embeddings for the batch
+                embeddings.extend([[0] * 1024] * len(batch_chunks))
+                
+        return embeddings
+
+class RAGExtractor:
+    """
+    RAG-based extractor that uses embeddings to find relevant chunks for each prompt.
+    """
+    def __init__(self, api_key, model="gpt-4o"):
+        self.api_key = api_key
+        self.model = model
+        logger.info(f"Initializing RAG extractor with model: {model}")
+        
+        from openai import OpenAI
+        self.client = OpenAI(api_key=self.api_key)
         
     def extract_information(self, paper_text, prompt, item_id, paper_id, embeddings, chunks):
         """
@@ -173,11 +229,11 @@ class RAGExtractorClaude:
         """
         logger.info(f"Extracting information for paper {paper_id}, checklist item: {item_id}")
         
-        # Generate embedding for the prompt
-        from openai import OpenAI
-        openai_client = OpenAI(api_key=API_KEYS["openai"])
+        # Generate embedding for the paper chunks (already done and passed in)
+        # We'll use the prompt to find the most relevant chunks
         
-        prompt_embedding = openai_client.embeddings.create(
+        # Generate embedding for the prompt
+        prompt_embedding = self.client.embeddings.create(
             model="text-embedding-3-small",
             input=prompt,
             dimensions=1536
@@ -201,7 +257,7 @@ class RAGExtractorClaude:
         if len(relevant_text) > 12000:
             relevant_text = relevant_text[:12000]
         
-        # Create a prompt for Claude
+        # Use the input prompt directly
         extraction_prompt = f"""
         {prompt}
         
@@ -211,7 +267,7 @@ class RAGExtractorClaude:
         Please provide your extraction in the following JSON format:
         {{
             "paper_identifier": "{paper_id}",
-            "Li-Paper_item_id": "{item_id}",
+            "Li-Paper_{paper_id}": "{item_id}",
             "extracted_content": {{
                 "compliance": "yes", "partial", "no", or "unknown",
                 "evidence": [
@@ -226,16 +282,16 @@ class RAGExtractorClaude:
         }}
         """
         
-        # Call Claude API
+        # Call OpenAI API
         try:
-            response = self.client.messages.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
-                max_tokens=2000,
+                messages=[{"role": "user", "content": extraction_prompt}],
                 temperature=0.2,
-                messages=[{"role": "user", "content": extraction_prompt}]
+                max_tokens=2000
             )
             
-            result = response.content[0].text
+            result = response.choices[0].message.content
             
             # Try to parse the result as JSON
             try:
@@ -255,7 +311,7 @@ class RAGExtractorClaude:
             # If parsing fails, return a basic structure
             return {
                 "paper_identifier": paper_id,
-                f"Li-Paper_item_id": item_id,
+                f"Li-Paper_{paper_id}": item_id,
                 "extracted_content": {
                     "compliance": "unknown",
                     "evidence": [],
@@ -264,11 +320,11 @@ class RAGExtractorClaude:
                 }
             }
         except Exception as e:
-            logger.error(f"Error calling Claude API: {e}")
+            logger.error(f"Error calling OpenAI API: {e}")
             
             return {
                 "paper_identifier": paper_id,
-                f"Li-Paper_item_id": item_id,
+                f"Li-Paper_{paper_id}": item_id,
                 "extracted_content": {
                     "compliance": "unknown",
                     "evidence": [],
@@ -283,17 +339,18 @@ class RAGExtractorClaude:
         """
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
-class RAGValidatorOpenAI:
+class RAGValidator:
     """
-    RAG-based validator that uses OpenAI to validate extractions.
+    RAG-based validator that uses embeddings to find relevant chunks for each prompt.
     """
-    def __init__(self, api_key, model="gpt-4o"):
+    def __init__(self, api_key, model="claude-3-5-sonnet-20241022", voyage_api_key=None):
         self.api_key = api_key
+        self.voyage_api_key = voyage_api_key
         self.model = model
-        logger.info(f"Initializing RAG validator with OpenAI model: {model}")
+        logger.info(f"Initializing RAG validator with model: {model}")
         
-        from openai import OpenAI
-        self.client = OpenAI(api_key=self.api_key)
+        from anthropic import Anthropic
+        self.client = Anthropic(api_key=self.api_key)
         
     def validate(self, extraction, guideline_item, item_id, paper_id, embeddings, chunks):
         """
@@ -301,14 +358,58 @@ class RAGValidatorOpenAI:
         """
         logger.info(f"Validating extraction for paper {paper_id}, checklist item: {item_id}")
         
-        # Generate embedding for the guideline item
+        # Generate embedding for the guideline item using Voyage if available, otherwise OpenAI
         guideline_text = f"CHECKLIST ITEM: {item_id}\nDESCRIPTION: {guideline_item.get('description', '')}"
-        guideline_embedding = self.client.embeddings.create(
-            model="text-embedding-3-small",
-            input=guideline_text,
-            dimensions=1536
-        ).data[0].embedding
-        ### Change embedding to Voyage-ai 
+        
+        if self.voyage_api_key:
+            # Use Voyage for embeddings
+            try:
+                response = requests.post(
+                    "https://api.voyageai.com/v1/embeddings",
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {self.voyage_api_key}"
+                    },
+                    json={
+                        "model": "voyage-2",
+                        "input": guideline_text,
+                        "truncation": True
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    guideline_embedding = data["data"][0]["embedding"]
+                else:
+                    logger.error(f"Error generating Voyage embedding: {response.text}")
+                    # Fall back to OpenAI
+                    from openai import OpenAI
+                    openai_client = OpenAI(api_key=API_KEYS["openai"])
+                    guideline_embedding = openai_client.embeddings.create(
+                        model="text-embedding-3-small",
+                        input=guideline_text,
+                        dimensions=1536
+                    ).data[0].embedding
+            except Exception as e:
+                logger.error(f"Error with Voyage embedding, falling back to OpenAI: {e}")
+                # Fall back to OpenAI
+                from openai import OpenAI
+                openai_client = OpenAI(api_key=API_KEYS["openai"])
+                guideline_embedding = openai_client.embeddings.create(
+                    model="text-embedding-3-small",
+                    input=guideline_text,
+                    dimensions=1536
+                ).data[0].embedding
+        else:
+            # Fall back to OpenAI
+            from openai import OpenAI
+            openai_client = OpenAI(api_key=API_KEYS["openai"])
+            guideline_embedding = openai_client.embeddings.create(
+                model="text-embedding-3-small",
+                input=guideline_text,
+                dimensions=1536
+            ).data[0].embedding
+        
         # Calculate similarity between guideline and chunks
         similarities = []
         for embedding in embeddings:
@@ -358,23 +459,23 @@ class RAGValidatorOpenAI:
         Please provide your validation in the following JSON format:
         {{
             "paper_identifier": "{paper_id}",
-            "Li-Paper_item_id": "{item_id}",
+            "Li-Paper_{paper_id}": "{item_id}",
             "validate_result": "agree with extractor", "do not agree with extractor", or "unknown",
             "Reason": "your assessment of the extraction",
             "correct_answer": "your answer to the specific checklist item question"
         }}
         """
         
-        # Call OpenAI API
+        # Call Claude API
         try:
-            response = self.client.chat.completions.create(
+            response = self.client.messages.create(
                 model=self.model,
-                messages=[{"role": "user", "content": validation_prompt}],
+                max_tokens=2000,
                 temperature=0.1,
-                max_tokens=2000
+                messages=[{"role": "user", "content": validation_prompt}]
             )
             
-            result = response.choices[0].message.content
+            result = response.content[0].text
             
             # Try to parse the result as JSON
             try:
@@ -394,17 +495,17 @@ class RAGValidatorOpenAI:
             # If parsing fails, return a basic structure
             return {
                 "paper_identifier": paper_id,
-                f"Li-Paper_item_id": item_id,
+                f"Li-Paper_{paper_id}": item_id,
                 "validate_result": compliance,
                 "Reason": f"Failed to parse result: {result[:500]}...",
                 "correct_answer": "unknown"
             }
         except Exception as e:
-            logger.error(f"Error calling OpenAI API: {e}")
+            logger.error(f"Error calling Claude API: {e}")
             
             return {
                 "paper_identifier": paper_id,
-                f"Li-Paper_item_id": item_id,
+                f"Li-Paper_{paper_id}": item_id,
                 "validate_result": "unknown",
                 "Reason": f"Error: {str(e)}",
                 "correct_answer": "unknown"
@@ -457,9 +558,9 @@ def load_prompts_from_file(prompts_file, guideline_type="Li-Paper"):
     logger.info(f"Loaded {len(prompts)} prompts")
     return guideline_info
 
-def process_paper_with_rag_swapped(paper_path, guideline_info, batch_size=5):
+def process_paper_with_rag(paper_path, guideline_info, batch_size=5, use_voyage=False):
     """
-    Process a paper using RAG-based extractor (Claude) and validator (OpenAI).
+    Process a paper using RAG-based extractor and validator.
     """
     paper_id = os.path.splitext(os.path.basename(paper_path))[0]
     logger.info(f"Processing paper: {paper_id}")
@@ -485,7 +586,11 @@ def process_paper_with_rag_swapped(paper_path, guideline_info, batch_size=5):
             embeddings = json.load(f)
     else:
         # Generate embeddings
-        embedding_generator = EmbeddingGenerator(API_KEYS["openai"])
+        if use_voyage and "voyage" in API_KEYS:
+            embedding_generator = VoyageEmbeddingGenerator(API_KEYS["voyage"])
+        else:
+            embedding_generator = OpenAIEmbeddingGenerator(API_KEYS["openai"])
+        
         embeddings = embedding_generator.generate_embeddings(chunks)
         
         # Save embeddings
@@ -493,9 +598,9 @@ def process_paper_with_rag_swapped(paper_path, guideline_info, batch_size=5):
             json.dump(embeddings, f)
         logger.info(f"Saved embeddings to {embeddings_file}")
     
-    # Initialize RAG extractor (Claude) and validator (OpenAI)
-    rag_extractor = RAGExtractorClaude(API_KEYS["anthropic"])
-    rag_validator = RAGValidatorOpenAI(API_KEYS["openai"])
+    # Initialize RAG extractor and validator
+    rag_extractor = RAGExtractor(API_KEYS["openai"])
+    rag_validator = RAGValidator(API_KEYS["anthropic"], voyage_api_key=API_KEYS.get("voyage"))
     
     # Get all item IDs
     item_ids = list(guideline_info["prompts"].keys())
@@ -511,7 +616,7 @@ def process_paper_with_rag_swapped(paper_path, guideline_info, batch_size=5):
         for item_id in batch_item_ids:
             prompt = guideline_info["prompts"][item_id]
             
-            # Extract information using Claude
+            # Extract information
             extraction = rag_extractor.extract_information(
                 paper_text, prompt, item_id, paper_id, embeddings, chunks
             )
@@ -523,7 +628,7 @@ def process_paper_with_rag_swapped(paper_path, guideline_info, batch_size=5):
                 logger.warning(f"No guideline item found for ID: {item_id}")
                 continue
             
-            # Validate extraction using OpenAI
+            # Validate extraction
             validation = rag_validator.validate(
                 extraction, guideline_item, item_id, paper_id, embeddings, chunks
             )
@@ -532,11 +637,11 @@ def process_paper_with_rag_swapped(paper_path, guideline_info, batch_size=5):
         # Save intermediate results after each batch
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        batch_extraction_filename = f"{timestamp}_rag_claude_batch_{i//batch_size + 1}_extraction_{paper_id}_{guideline_info['guideline_type']}.json"
+        batch_extraction_filename = f"{timestamp}_rag_batch_{i//batch_size + 1}_extraction_{paper_id}_{guideline_info['guideline_type']}.json"
         with open(os.path.join(OUTPUT_PATH, batch_extraction_filename), "w") as f:
             json.dump(extracted_info, f, indent=2)
         
-        batch_validation_filename = f"{timestamp}_rag_openai_batch_{i//batch_size + 1}_validation_{paper_id}_{guideline_info['guideline_type']}.json"
+        batch_validation_filename = f"{timestamp}_rag_batch_{i//batch_size + 1}_validation_{paper_id}_{guideline_info['guideline_type']}.json"
         with open(os.path.join(OUTPUT_PATH, batch_validation_filename), "w") as f:
             json.dump(validation_results, f, indent=2)
         
@@ -548,8 +653,8 @@ def process_paper_with_rag_swapped(paper_path, guideline_info, batch_size=5):
         "checklist": guideline_info["guideline_type"],
         "validation_summary": calculate_metrics(validation_results),
         "model_info": {
-            "extractor": f"rag-claude-{rag_extractor.model}",
-            "validator": f"rag-openai-{rag_validator.model}"
+            "extractor": f"rag-openai-{rag_extractor.model}",
+            "validator": f"rag-claude-{rag_validator.model}"
         },
         "items": {}
     }
@@ -575,9 +680,9 @@ def process_paper_with_rag_swapped(paper_path, guideline_info, batch_size=5):
             "disagreements": []
         }
     
-    # Save final report with model info in filename
+    # Save final report
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_filename = f"{timestamp}_rag_claude_extractor_openai_validator_report_{paper_id}_{guideline_info['guideline_type']}.json"
+    report_filename = f"{timestamp}_rag_report_{paper_id}_{guideline_info['guideline_type']}.json"
     with open(os.path.join(OUTPUT_PATH, report_filename), "w") as f:
         json.dump(report, f, indent=2)
     
@@ -643,11 +748,12 @@ def main():
     import argparse
     
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Run RAG-based extractor (Claude) and validator (OpenAI) for Li-Paper SOP')
+    parser = argparse.ArgumentParser(description='Run RAG-based extractor and validator for Li-Paper SOP')
     parser.add_argument('--prompts', type=str, required=True, help='Path to prompts file')
     parser.add_argument('--paper', type=str, required=True, help='Path to paper file')
     parser.add_argument('--checklist', type=str, default='Li-Paper', help='Checklist type (default: Li-Paper)')
     parser.add_argument('--batch-size', type=int, default=5, help='Batch size for processing items (default: 5)')
+    parser.add_argument('--use-voyage', action='store_true', help='Use Voyage AI for embeddings')
     
     args = parser.parse_args()
     
@@ -655,7 +761,7 @@ def main():
     guideline_info = load_prompts_from_file(args.prompts, args.checklist)
     
     # Process paper
-    result = process_paper_with_rag_swapped(args.paper, guideline_info, args.batch_size)
+    result = process_paper_with_rag(args.paper, guideline_info, args.batch_size, args.use_voyage)
     
     if result:
         logger.info(f"Successfully processed paper: {os.path.basename(args.paper)}")
@@ -682,6 +788,7 @@ def main():
         print("\n" + "="*80)
     else:
         logger.error(f"Failed to process paper: {args.paper}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

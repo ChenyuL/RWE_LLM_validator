@@ -1,8 +1,0 @@
-Metric,Value
-Number of Papers Analyzed,30
-OpenAI-Claude Mean Agreement Rate (%),95.23809523809523
-Claude-OpenAI Mean Agreement Rate (%),79.75786924939467
-Model Output Agreement Rate (%),46.85714285714286
-Correlation: OpenAI-Claude vs. Model Output,-0.20108610922568493
-Correlation: Claude-OpenAI vs. Model Output,-0.5208433696764821
-Significant Difference Between Configurations,Yes

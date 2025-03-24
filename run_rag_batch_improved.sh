@@ -1,10 +1,9 @@
 #!/bin/bash
-# run_rag_batch_swapped.sh
-# Script to run the swapped RAG-based batch processing on the sampled papers
+# run_rag_batch_improved.sh
+# Script to run the improved RAG-based batch processing on the sampled papers
 
 # Make the Python scripts executable
-chmod +x rag_extractor_validator_swapped.py
-chmod +x run_rag_batch.py
+chmod +x rag_extractor_validator_improved.py
 
 # Check if required packages are installed
 if ! python -c "import PyPDF2" &> /dev/null; then
@@ -32,22 +31,95 @@ if ! python -c "import anthropic" &> /dev/null; then
     pip install anthropic
 fi
 
+if ! python -c "import voyageai" &> /dev/null; then
+    echo "Installing voyageai..."
+    pip install voyageai
+fi
+
 # Create output directories
 mkdir -p output/embeddings
 
-# Set variables
-PROMPTS_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/prompts/20250322_144753_openai_reasoner_Li-Paper_prompts.json"
-PAPERS_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/paper_results/fixed_sampled_papers.json"
-PAPERS_DIR="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/data/Papers"
-CHECKLIST="Li-Paper"
-BATCH_SIZE=5
-MAX_WORKERS=30  # Set to higher value for parallel processing
+# Default values
+DEFAULT_PROMPTS_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/prompts/20250322_144753_openai_reasoner_Li-Paper_prompts.json"
+DEFAULT_PAPERS_FILE="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/output/paper_results/fixed_sampled_papers.json"
+DEFAULT_PAPERS_DIR="/Users/chenyuli/LLMEvaluation/RWE_LLM_validator/data/Papers"
+DEFAULT_CHECKLIST="Li-Paper"
+DEFAULT_MAX_WORKERS=30  # Lower default for sequential processing of items
+DEFAULT_EXTRACTOR_MODEL="gpt-4o"
+DEFAULT_EXTRACTOR_PROVIDER="openai"
+DEFAULT_VALIDATOR_MODEL="claude-3-5-sonnet-20241022"
+DEFAULT_VALIDATOR_PROVIDER="anthropic"
 
-# Create a modified version of run_rag_batch.py for the swapped models
-cat > run_rag_batch_swapped.py << 'EOF'
+# Parse command line arguments
+PROMPTS_FILE=$DEFAULT_PROMPTS_FILE
+PAPERS_FILE=$DEFAULT_PAPERS_FILE
+PAPERS_DIR=$DEFAULT_PAPERS_DIR
+CHECKLIST=$DEFAULT_CHECKLIST
+MAX_WORKERS=$DEFAULT_MAX_WORKERS
+EXTRACTOR_MODEL=$DEFAULT_EXTRACTOR_MODEL
+EXTRACTOR_PROVIDER=$DEFAULT_EXTRACTOR_PROVIDER
+VALIDATOR_MODEL=$DEFAULT_VALIDATOR_MODEL
+VALIDATOR_PROVIDER=$DEFAULT_VALIDATOR_PROVIDER
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --prompts)
+      PROMPTS_FILE="$2"
+      shift 2
+      ;;
+    --papers)
+      PAPERS_FILE="$2"
+      shift 2
+      ;;
+    --papers-dir)
+      PAPERS_DIR="$2"
+      shift 2
+      ;;
+    --checklist)
+      CHECKLIST="$2"
+      shift 2
+      ;;
+    --max-workers)
+      MAX_WORKERS="$2"
+      shift 2
+      ;;
+    --extractor-model)
+      EXTRACTOR_MODEL="$2"
+      shift 2
+      ;;
+    --extractor-provider)
+      EXTRACTOR_PROVIDER="$2"
+      shift 2
+      ;;
+    --validator-model)
+      VALIDATOR_MODEL="$2"
+      shift 2
+      ;;
+    --validator-provider)
+      VALIDATOR_PROVIDER="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
+
+echo "Using prompts file: $PROMPTS_FILE"
+echo "Using papers file: $PAPERS_FILE"
+echo "Using papers directory: $PAPERS_DIR"
+echo "Using checklist: $CHECKLIST"
+echo "Using max workers: $MAX_WORKERS"
+echo "Using extractor model: $EXTRACTOR_MODEL (provider: $EXTRACTOR_PROVIDER)"
+echo "Using validator model: $VALIDATOR_MODEL (provider: $VALIDATOR_PROVIDER)"
+
+# Create a batch processing script for the improved RAG extractor/validator
+cat > run_rag_batch_improved.py << 'EOF'
 #!/usr/bin/env python
-# run_rag_batch_swapped.py
-# Script to run the swapped RAG-based extractor and validator on multiple papers
+# run_rag_batch_improved.py
+# Script to run the improved RAG-based extractor and validator on multiple papers
 
 import os
 import json
@@ -63,25 +135,28 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("rag_batch_swapped.log"),
+        logging.FileHandler("rag_batch_improved.log"),
         logging.StreamHandler()
     ]
 )
-logger = logging.getLogger("rag_batch_swapped")
+logger = logging.getLogger("rag_batch_improved")
 
-def process_paper(paper_path, prompts_file, checklist, batch_size):
+def process_paper(paper_path, prompts_file, checklist, extractor_model, extractor_provider, validator_model, validator_provider):
     """
-    Process a single paper using the swapped RAG-based extractor and validator.
+    Process a single paper using the improved RAG-based extractor and validator.
     """
     paper_id = os.path.splitext(os.path.basename(paper_path))[0]
     logger.info(f"Processing paper: {paper_id}")
     
     cmd = [
-        "python", "rag_extractor_validator_swapped.py",
+        "python", "rag_extractor_validator_improved.py",
         "--prompts", prompts_file,
         "--paper", paper_path,
         "--checklist", checklist,
-        "--batch-size", str(batch_size)
+        "--extractor-model", extractor_model,
+        "--extractor-provider", extractor_provider,
+        "--validator-model", validator_model,
+        "--validator-provider", validator_provider
     ]
     
     try:
@@ -105,15 +180,18 @@ def process_paper(paper_path, prompts_file, checklist, batch_size):
 
 def main():
     """
-    Main function to run the swapped RAG-based extractor and validator on multiple papers.
+    Main function to run the improved RAG-based extractor and validator on multiple papers.
     """
-    parser = argparse.ArgumentParser(description='Run swapped RAG-based extractor and validator on multiple papers')
+    parser = argparse.ArgumentParser(description='Run improved RAG-based extractor and validator on multiple papers')
     parser.add_argument('--papers', type=str, required=True, help='Path to JSON file with list of paper IDs or directory containing papers')
     parser.add_argument('--prompts', type=str, required=True, help='Path to prompts file')
     parser.add_argument('--checklist', type=str, default='Li-Paper', help='Checklist type (default: Li-Paper)')
-    parser.add_argument('--batch-size', type=int, default=5, help='Batch size for processing items (default: 5)')
-    parser.add_argument('--max-workers', type=int, default=1, help='Maximum number of parallel workers (default: 1)')
+    parser.add_argument('--max-workers', type=int, default=4, help='Maximum number of parallel workers (default: 4)')
     parser.add_argument('--papers-dir', type=str, default='data/Papers', help='Directory containing paper PDFs (default: data/Papers)')
+    parser.add_argument('--extractor-model', type=str, default='gpt-4o', help='Model to use for extraction (default: gpt-4o)')
+    parser.add_argument('--extractor-provider', type=str, default='openai', help='Provider to use for extraction (default: openai)')
+    parser.add_argument('--validator-model', type=str, default='claude-3-5-sonnet-20241022', help='Model to use for validation (default: claude-3-5-sonnet-20241022)')
+    parser.add_argument('--validator-provider', type=str, default='anthropic', help='Provider to use for validation (default: anthropic)')
     
     args = parser.parse_args()
     
@@ -171,7 +249,9 @@ def main():
             futures = []
             for paper_path in paper_paths:
                 future = executor.submit(
-                    process_paper, paper_path, args.prompts, args.checklist, args.batch_size
+                    process_paper, paper_path, args.prompts, args.checklist,
+                    args.extractor_model, args.extractor_provider,
+                    args.validator_model, args.validator_provider
                 )
                 futures.append(future)
             
@@ -185,11 +265,15 @@ def main():
     else:
         # Process papers sequentially
         for paper_path in paper_paths:
-            result = process_paper(paper_path, args.prompts, args.checklist, args.batch_size)
+            result = process_paper(
+                paper_path, args.prompts, args.checklist,
+                args.extractor_model, args.extractor_provider,
+                args.validator_model, args.validator_provider
+            )
             results.append(result)
     
     # Save results
-    output_file = f"rag_swapped_batch_results_{time.strftime('%Y%m%d_%H%M%S')}.json"
+    output_file = f"rag_improved_batch_results_{time.strftime('%Y%m%d_%H%M%S')}.json"
     with open(output_file, 'w') as f:
         json.dump(results, f, indent=2)
     
@@ -212,16 +296,19 @@ if __name__ == "__main__":
 EOF
 
 # Make the Python script executable
-chmod +x run_rag_batch_swapped.py
+chmod +x run_rag_batch_improved.py
 
-# Run the swapped RAG-based batch processing
-echo "Running swapped RAG-based batch processing..."
-python run_rag_batch_swapped.py \
+# Run the improved RAG-based batch processing
+echo "Running improved RAG-based batch processing..."
+python run_rag_batch_improved.py \
     --papers "$PAPERS_FILE" \
     --prompts "$PROMPTS_FILE" \
     --checklist "$CHECKLIST" \
-    --batch-size "$BATCH_SIZE" \
     --max-workers "$MAX_WORKERS" \
-    --papers-dir "$PAPERS_DIR"
+    --papers-dir "$PAPERS_DIR" \
+    --extractor-model "$EXTRACTOR_MODEL" \
+    --extractor-provider "$EXTRACTOR_PROVIDER" \
+    --validator-model "$VALIDATOR_MODEL" \
+    --validator-provider "$VALIDATOR_PROVIDER"
 
 echo "Done!"
