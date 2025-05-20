@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 import base64
 import tempfile
+from dotenv import load_dotenv
 
 # Define paths
 CHECKLISTS_PATH = os.path.join("data", "Guidelines")  # Keeping the folder name for backward compatibility, but using "checklist" in UI
@@ -127,18 +128,73 @@ def display_json(file_path):
 # Main app
 def main():
     st.set_page_config(page_title="RWE LLM Validator", page_icon="📊", layout="wide")
-    
+
     st.title("RWE LLM Validator")
     st.markdown("A tool for validating research papers against reporting guidelines using Large Language Models (LLMs).")
-    
+
+    # Load existing API keys so they are available to the app
+    load_dotenv()
+
     # Ensure directories exist
     ensure_directories()
-    
+
     # Sidebar
     st.sidebar.title("Navigation")
-    page = st.sidebar.radio("Go to", ["Upload Checklists", "Upload Papers", "Run Validation", "View Results"])
+    page = st.sidebar.radio(
+        "Go to",
+        [
+            "API Keys",
+            "Upload Checklists",
+            "Upload Papers",
+            "Run Validation",
+            "View Results",
+        ],
+    )
     
-    if page == "Upload Checklists":
+    if page == "API Keys":
+        st.header("API Keys")
+
+        # Existing values from environment if present
+        openai_key = st.text_input(
+            "OpenAI API Key",
+            value=os.environ.get("OPENAI_API_KEY", ""),
+            type="password",
+        )
+        anthropic_key = st.text_input(
+            "Anthropic API Key",
+            value=os.environ.get("ANTHROPIC_API_KEY", ""),
+            type="password",
+        )
+        deepseek_key = st.text_input(
+            "DeepSeek API Key",
+            value=os.environ.get("DEEPSEEK_API_KEY", ""),
+            type="password",
+        )
+
+        if st.button("Save API Keys"):
+            env_path = Path(".env")
+            current = {}
+            if env_path.exists():
+                with open(env_path, "r") as f:
+                    for line in f:
+                        if "=" in line:
+                            k, v = line.strip().split("=", 1)
+                            current[k] = v
+            if openai_key:
+                current["OPENAI_API_KEY"] = openai_key
+            if anthropic_key:
+                current["ANTHROPIC_API_KEY"] = anthropic_key
+            if deepseek_key:
+                current["DEEPSEEK_API_KEY"] = deepseek_key
+
+            with open(env_path, "w") as f:
+                for k, v in current.items():
+                    f.write(f"{k}={v}\n")
+
+            load_dotenv(override=True)
+            st.success("API keys saved and loaded.")
+
+    elif page == "Upload Checklists":
         st.header("Upload Checklists")
         
         # Create new checklist folder

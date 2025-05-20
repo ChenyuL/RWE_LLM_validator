@@ -32,7 +32,17 @@ The results from both configurations are analyzed to measure agreement rates and
 
 - Python 3.8+
 - Required Python packages (install with `pip install -r requirements.txt`)
-- API keys for OpenAI and Anthropic (Claude) in a `.env` file
+- API keys for OpenAI and Anthropic (Claude) in a `.env` file. A DeepSeek key is optional.
+
+### Streamlit Interface
+
+You can interact with the framework using a simple Streamlit web app:
+
+```bash
+streamlit run app.py
+```
+
+Use the **API Keys** page in the sidebar to enter your credentials. The keys are saved to a `.env` file so they persist between sessions.
 
 ### Validation Process
 
