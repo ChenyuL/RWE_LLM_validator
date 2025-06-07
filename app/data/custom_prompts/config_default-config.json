@@ -1,0 +1,32 @@
+{
+  "agent_config": {
+    "reasoner": {
+      "type": "base",
+      "model": "o3-mini-2025-01-31"
+    },
+    "extractor": {
+      "type": "base",
+      "model": "gpt-4o",
+      "custom_prompt": "You are an expert in {checklist_type} guidelines for {domain} research.\n\nAnalyze the following paper section for compliance with item {item_id}:\n{item_description}\n\nPaper text: {paper_text}\n\nProvide specific evidence and clear reasoning for your assessment."
+    },
+    "validator": {
+      "type": "base",
+      "model": "claude-3-5-sonnet-20241022",
+      "custom_prompt": "You are a strict validator for {checklist_type} compliance.\n\nThe extractor found: {compliance_assessment}\nEvidence: {evidence}\n\nVerify this assessment is correct and complete. Be conservative in your validation."
+    }
+  },
+  "rag_config": {
+    "chunk_size": 1000,
+    "chunk_overlap": 200,
+    "top_k": 5,
+    "similarity_threshold": 0.45,
+    "embedding_model": "voyage-3"
+  },
+  "pipeline_config": {
+    "mode": "full",
+    "batch_size": 5,
+    "checklist_type": "RECORD"
+  },
+  "timestamp": "",
+  "description": "Configuration saved with default-config"
+}

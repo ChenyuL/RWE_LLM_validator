@@ -13,16 +13,22 @@ PyPDF2>=3.0.1
 pdf2image>=1.16.3
 pytesseract>=0.3.10
 
-# Vector Store
+# Vector Store and RAG
 faiss-cpu>=1.7.4
+voyageai>=0.2.0
 
-# Data handling
+# Data handling and visualization
 python-dotenv>=1.0.0
 pydantic>=2.5.2
 typing-extensions>=4.8.0
+plotly>=5.17.0
+tqdm>=4.66.0
 
-# Testing dependencies
--r requirements-test.txt
+# Web framework
+streamlit>=1.30
+
+# Testing dependencies (optional)
+# -r requirements-test.txt
 
 # Optional dependencies for development
 black>=23.11.0

@@ -148,10 +148,13 @@ class Validator:
             
             Please provide your validation in the following JSON format:
             {{
+                "validate_result": "agree with extractor" or "do not agree with extractor",
                 "compliance": "yes", "partial", "no", or "unknown",
                 "confidence": 0.0-1.0 (your confidence in this validation),
                 "validated_reasoning": "your assessment of the extraction",
                 "evidence_quality": "strong", "moderate", "weak", or "insufficient",
+                "correct_answer": "the correct answer to the checklist item question",
+                "Reason": "detailed explanation of your validation decision",
                 "disagreements": [
                     {{
                         "issue": "description of the issue",
@@ -159,6 +162,11 @@ class Validator:
                     }}
                 ]
             }}
+            
+            IMPORTANT:
+            - validate_result should be "agree with extractor" if you agree with the extractor's compliance assessment, or "do not agree with extractor" if you disagree
+            - correct_answer should provide the definitive answer to what the checklist item is asking for
+            - Reason should explain why you agree or disagree with the extractor's assessment
             """
             
             # Call LLM for validation
@@ -169,10 +177,13 @@ class Validator:
         else:
             # Use mock validation for testing
             validation = {
+                "validate_result": "agree with extractor",  # Mock always agrees
                 "compliance": compliance,
                 "confidence": confidence,
                 "validated_reasoning": "Mock validation: accepting extractor's assessment",
                 "evidence_quality": "moderate" if evidence else "insufficient",
+                "correct_answer": extraction.get("answer", extraction.get("correct_answer", "Mock answer")),
+                "Reason": "Mock validator automatically agrees with extractor assessment",
                 "disagreements": []
             }
         
@@ -248,10 +259,13 @@ class Validator:
             
             # Return a basic error response
             return json.dumps({
+                "validate_result": "do not agree with extractor",  # Default to disagreement on error
                 "compliance": "unknown",
                 "confidence": 0.0,
                 "validated_reasoning": f"Error calling LLM: {str(e)}",
                 "evidence_quality": "insufficient",
+                "correct_answer": "Could not determine due to LLM error",
+                "Reason": f"Validation failed due to LLM error: {str(e)}",
                 "disagreements": [{
                     "issue": f"Error calling LLM: {str(e)}",
                     "severity": "high"
@@ -286,10 +300,13 @@ class Validator:
             # If all else fails, create a basic validation
             self.logger.warning("Failed to parse validation result as JSON")
             return {
+                "validate_result": "do not agree with extractor",  # Default to disagreement when parsing fails
                 "compliance": "unknown",
                 "confidence": 0.0,
                 "validated_reasoning": f"Failed to parse result: {result[:500]}...",
                 "evidence_quality": "insufficient",
+                "correct_answer": "Could not determine due to parsing error",
+                "Reason": "Validation failed due to JSON parsing error",
                 "disagreements": [{
                     "issue": "Could not parse validation result",
                     "severity": "high"

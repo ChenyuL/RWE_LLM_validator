@@ -170,6 +170,7 @@ class Extractor:
             
             Please provide your extraction in the following JSON format:
             {{
+                "item_description": "[copy the complete item description from the guideline above]",
                 "compliance": "yes", "partial", "no", or "unknown",
                 "evidence": [
                     {{
@@ -178,11 +179,17 @@ class Extractor:
                     }}
                 ],
                 "confidence": 0.0-1.0 (your confidence in this assessment),
-                "reasoning": "explanation of your assessment"
+                "reasoning": "explanation of your assessment",
+                "answer": "specific answer to the checklist item question",
+                "item_id": "[copy the item ID from the guideline above]"
             }}
             
-            Focus only on this specific guideline item. If you can't find relevant information in 
-            this chunk, indicate that with "unknown" compliance and explain in the reasoning.
+            IMPORTANT:
+            - Include the complete item description from the guideline in item_description
+            - Include the item ID exactly as it appears in the guideline
+            - The answer should directly address what the checklist item is asking for
+            - Focus only on this specific guideline item
+            - If you can't find relevant information in this chunk, indicate that with "unknown" compliance and explain in the reasoning
             """
             
             # Call LLM to extract information from this chunk
@@ -397,12 +404,22 @@ class Extractor:
         # Combine reasoning
         reasoning = current.get("reasoning", "") + "\n\n" + chunk.get("reasoning", "")
         
+        # Get item description and answer from the chunk with highest confidence
+        item_description = current.get("item_description", "")
+        answer = current.get("answer", "")
+        
+        if chunk_confidence > current_confidence:
+            item_description = chunk.get("item_description", item_description)
+            answer = chunk.get("answer", answer)
+        
         return {
             "item_id": current.get("item_id", ""),
+            "item_description": item_description,
             "compliance": compliance,
             "evidence": evidence,
             "confidence": weighted_confidence,
-            "reasoning": reasoning
+            "reasoning": reasoning,
+            "answer": answer
         }
         
     def _finalize_extraction(self, extraction: Dict[str, Any], item_id: str) -> Dict[str, Any]:
