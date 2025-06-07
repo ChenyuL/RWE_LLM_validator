@@ -1,5 +1,8 @@
 import streamlit as st
-from utils.session_state import load_api_keys_from_env, save_api_keys_to_env, check_api_keys_status
+from utils.session_state import load_api_keys_from_env, save_api_keys_to_env, check_api_keys_status, initialize_session_state
+
+# Ensure session state is initialized
+initialize_session_state()
 
 # Page header
 st.header("🔑 API Keys Configuration")

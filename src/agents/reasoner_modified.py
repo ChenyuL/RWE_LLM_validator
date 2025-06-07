@@ -44,6 +44,8 @@ class Reasoner(BaseReasoner):
             # Skip the base method and extract items directly
             all_items = self._extract_additional_items(guideline_texts)
             # Ensure we have all 35 Li-Paper SOP items
+            if all_items is None:
+                all_items = []
             all_items = self._ensure_complete_li_paper_items(all_items)
         else:
             # First, extract the items using the base method
@@ -51,6 +53,10 @@ class Reasoner(BaseReasoner):
             
             # Now, add the missing STROBE and RECORD items
             additional_items = self._extract_additional_items(guideline_texts)
+            
+            # Ensure additional_items is not None
+            if additional_items is None:
+                additional_items = []
             
             # Combine the items, avoiding duplicates
             all_items = base_items.copy()
@@ -141,6 +147,83 @@ class Reasoner(BaseReasoner):
             
             self.logger.info(f"Extracted {len(items)} Li-Paper SOP items")
             return items
+        
+        # For other checklists, use the LLM approach
+        if is_strobe:
+            checklist_type = "STROBE"
+            expected_items = 22  # STROBE has 22 items
+            # Use specialized STROBE extraction
+            items = self._extract_strobe_items_comprehensive(combined_text)
+            if items:
+                self.logger.info(f"Extracted {len(items)} STROBE items using comprehensive approach")
+                return items
+        elif is_record:
+            checklist_type = "RECORD"
+            expected_items = 13  # RECORD has 13 items
+        else:
+            checklist_type = "reporting guideline"
+            expected_items = None  # Unknown number of items
+        
+        # Create a generic prompt that works for any checklist type
+        prompt = """
+        You are an expert in biomedical research methodology and reporting checklists.
+        
+        Your task is to extract ALL items from the following {checklist_type} checklist.
+        For each item, provide:
+        1. Item ID or number (as it appears in the checklist)
+        2. The complete item description/requirement
+        3. The category or section it belongs to (if available)
+        
+        Format your response as a JSON array of objects, with each object representing 
+        one checklist item with the following properties:
+        - "id": the item identifier (exactly as it appears in the checklist)
+        - "description": the complete item description
+        - "category": the section or category it belongs to (if available, otherwise use "General")
+        - "notes": "{checklist_type}"
+        
+        Do not paraphrase or summarize the checklist. Extract items verbatim from the text.
+        
+        IMPORTANT: Make sure to extract ALL items from the checklist. If you can't find all items in the text, 
+        use the information you have to create entries for all items.
+        
+        REPORTING CHECKLIST TEXT:
+        {text}
+        """.format(
+            checklist_type=checklist_type,
+            text=combined_text[:50000]  # Limit text length
+        )
+        
+        # Call LLM to extract checklist items
+        self.logger.info(f"Extracting items from {checklist_type} checklist")
+        result = self._call_llm(prompt)
+        
+        # Try to parse the result as JSON
+        items = self._parse_json_result(result)
+        
+        # If parsing failed, try to extract JSON from text
+        if not items:
+            items = self._extract_json_from_text(result)
+        
+        # If extraction failed, try a different approach
+        if not items:
+            self.logger.warning("Failed to extract checklist items as JSON. Trying with structured text approach.")
+            items = self._extract_items_structured([combined_text])
+        
+        # Ensure we always return a list, even if empty
+        if not items:
+            self.logger.error(f"Failed to extract any items from {checklist_type} checklist. Returning empty list.")
+            items = []
+        
+        # Log the number of items extracted
+        if expected_items and len(items) < expected_items:
+            self.logger.warning(f"LLM extracted only {len(items)} {checklist_type} items (expected {expected_items}). This may indicate an issue with extraction.")
+        
+        # Ensure all items have the correct note
+        for item in items:
+            item["notes"] = checklist_type
+        
+        self.logger.info(f"Extracted {len(items)} checklist items from the provided texts")
+        return items
     
     def _extract_strobe_items_comprehensive(self, text: str) -> List[Dict[str, Any]]:
         """
@@ -189,18 +272,28 @@ class Reasoner(BaseReasoner):
         {text}
         """.format(text=text[:50000])
         
-        result = self._call_llm(prompt)
-        items = self._parse_json_result(result)
-        
-        # If we didn't get 22 items, try a fallback approach
-        if len(items) != 22:
-            self.logger.warning(f"First STROBE extraction attempt yielded {len(items)} items instead of 22. Trying fallback approach.")
-            items = self._extract_strobe_items_fallback(text)
-        
-        # Ensure we have exactly 22 items with proper structure
-        items = self._ensure_complete_strobe_items(items)
-        
-        return items
+        try:
+            result = self._call_llm(prompt)
+            items = self._parse_json_result(result)
+            
+            # If we didn't get 22 items, try a fallback approach
+            if len(items) != 22:
+                self.logger.warning(f"First STROBE extraction attempt yielded {len(items)} items instead of 22. Trying fallback approach.")
+                items = self._extract_strobe_items_fallback(text)
+            
+            # Ensure we have exactly 22 items with proper structure
+            items = self._ensure_complete_strobe_items(items)
+            
+            # Ensure we always return a list
+            if not items:
+                self.logger.error("Failed to extract STROBE items. Returning empty list.")
+                items = []
+            
+            return items
+        except Exception as e:
+            self.logger.error(f"Error in STROBE extraction: {e}")
+            # Return standard STROBE items as fallback
+            return self._ensure_complete_strobe_items([])
     
     def _extract_strobe_items_fallback(self, text: str) -> List[Dict[str, Any]]:
         """
@@ -346,78 +439,6 @@ class Reasoner(BaseReasoner):
         
         self.logger.info(f"Ensured complete STROBE checklist with {len(complete_items)} items")
         return complete_items
-        
-        # For other checklists, use the LLM approach
-        if is_strobe:
-            checklist_type = "STROBE"
-            expected_items = 22  # STROBE has 22 items
-            # Use specialized STROBE extraction
-            items = self._extract_strobe_items_comprehensive(combined_text)
-            if items:
-                self.logger.info(f"Extracted {len(items)} STROBE items using comprehensive approach")
-                return items
-        elif is_record:
-            checklist_type = "RECORD"
-            expected_items = 13  # RECORD has 13 items
-        else:
-            checklist_type = "reporting guideline"
-            expected_items = None  # Unknown number of items
-        
-        # Create a generic prompt that works for any checklist type
-        prompt = """
-        You are an expert in biomedical research methodology and reporting checklists.
-        
-        Your task is to extract ALL items from the following {checklist_type} checklist.
-        For each item, provide:
-        1. Item ID or number (as it appears in the checklist)
-        2. The complete item description/requirement
-        3. The category or section it belongs to (if available)
-        
-        Format your response as a JSON array of objects, with each object representing 
-        one checklist item with the following properties:
-        - "id": the item identifier (exactly as it appears in the checklist)
-        - "description": the complete item description
-        - "category": the section or category it belongs to (if available, otherwise use "General")
-        - "notes": "{checklist_type}"
-        
-        Do not paraphrase or summarize the checklist. Extract items verbatim from the text.
-        
-        IMPORTANT: Make sure to extract ALL items from the checklist. If you can't find all items in the text, 
-        use the information you have to create entries for all items.
-        
-        REPORTING CHECKLIST TEXT:
-        {text}
-        """.format(
-            checklist_type=checklist_type,
-            text=combined_text[:50000]  # Limit text length
-        )
-        
-        # Call LLM to extract checklist items
-        self.logger.info(f"Extracting items from {checklist_type} checklist")
-        result = self._call_llm(prompt)
-        
-        # Try to parse the result as JSON
-        items = self._parse_json_result(result)
-        
-        # If parsing failed, try to extract JSON from text
-        if not items:
-            items = self._extract_json_from_text(result)
-        
-        # If extraction failed, try a different approach
-        if not items:
-            self.logger.warning("Failed to extract checklist items as JSON. Trying with structured text approach.")
-            items = self._extract_items_structured([combined_text])
-        
-        # Log the number of items extracted
-        if expected_items and len(items) < expected_items:
-            self.logger.warning(f"LLM extracted only {len(items)} {checklist_type} items (expected {expected_items}). This may indicate an issue with extraction.")
-        
-        # Ensure all items have the correct note
-        for item in items:
-            item["notes"] = checklist_type
-        
-        self.logger.info(f"Extracted {len(items)} checklist items from the provided texts")
-        return items
     
     def generate_prompts(self, guideline_items: List[Dict[str, Any]], batch_size: int = 50) -> Dict[str, str]:
         """
@@ -466,18 +487,41 @@ class Reasoner(BaseReasoner):
             List of checklist items
         """
         try:
+            # Clean the result first
+            result = result.strip()
+            
             # Try to parse the result as JSON
-            if result.strip().startswith("[") and result.strip().endswith("]"):
+            if result.startswith("[") and result.endswith("]"):
                 return json.loads(result)
             
-            # Look for JSON array in the text
-            match = re.search(r'\[\s*\{.*\}\s*\]', result, re.DOTALL)
+            # Look for JSON array in the text with more flexible pattern
+            match = re.search(r'\[\s*\{.*?\}\s*\]', result, re.DOTALL)
             if match:
-                return json.loads(match.group(0))
+                json_str = match.group(0)
+                # Clean up any formatting issues
+                json_str = re.sub(r'\n\s*', ' ', json_str)  # Remove newlines and extra spaces
+                return json.loads(json_str)
+            
+            # Try to find JSON objects and construct an array
+            objects = re.findall(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', result, re.DOTALL)
+            if objects:
+                items = []
+                for obj_str in objects:
+                    try:
+                        obj_str = re.sub(r'\n\s*', ' ', obj_str)  # Clean formatting
+                        obj = json.loads(obj_str)
+                        if isinstance(obj, dict) and 'id' in obj:
+                            items.append(obj)
+                    except json.JSONDecodeError:
+                        continue
+                return items
             
             return []
-        except json.JSONDecodeError:
-            self.logger.warning("Failed to parse LLM response as JSON")
+        except json.JSONDecodeError as e:
+            self.logger.warning(f"Failed to parse LLM response as JSON: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"Unexpected error parsing JSON: {e}")
             return []
     
     def _extract_json_from_text(self, text: str) -> List[Dict[str, Any]]:

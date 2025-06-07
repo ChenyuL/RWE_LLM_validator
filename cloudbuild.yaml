@@ -1,0 +1,50 @@
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', 
+      '-t', 'gcr.io/$PROJECT_ID/llm-validation-app:$BUILD_ID',
+      '-t', 'gcr.io/$PROJECT_ID/llm-validation-app:latest',
+      '.'
+    ]
+  
+  # Push the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/llm-validation-app:$BUILD_ID']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/llm-validation-app:latest']
+  
+  # Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: [
+      'run', 'deploy', 'llm-validation-app',
+      '--image', 'gcr.io/$PROJECT_ID/llm-validation-app:$BUILD_ID',
+      '--platform', 'managed',
+      '--region', 'us-central1',
+      '--allow-unauthenticated',
+      '--memory', '4Gi',
+      '--cpu', '2',
+      '--timeout', '3600',
+      '--concurrency', '10',
+      '--max-instances', '5',
+      '--set-env-vars', 'PYTHONUNBUFFERED=1',
+      '--update-env-vars', 'OPENAI_API_KEY=${_OPENAI_API_KEY},ANTHROPIC_API_KEY=${_ANTHROPIC_API_KEY},VOYAGE_API_KEY=${_VOYAGE_API_KEY},DEEPSEEK_API_KEY=${_DEEPSEEK_API_KEY}'
+    ]
+
+# Substitutions for environment variables (set these in Cloud Build trigger)
+substitutions:
+  _OPENAI_API_KEY: 'your-openai-api-key'
+  _ANTHROPIC_API_KEY: 'your-anthropic-api-key'
+  _VOYAGE_API_KEY: 'your-voyage-api-key'
+  _DEEPSEEK_API_KEY: 'your-deepseek-api-key'
+
+options:
+  # Use higher machine type for faster builds
+  machineType: 'E2_HIGHCPU_8'
+  # Increase disk size for large data files
+  diskSizeGb: 100
+  # Enable logging
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1800s'  # 30 minutes timeout

@@ -41,6 +41,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
+    # Initialize session state first
+    from utils.session_state import initialize_session_state
+    initialize_session_state()
+    
     # Main header
     st.markdown('<div class="main-header">🔬 RWE LLM Validator</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Multi-Agent Framework for Clinical Checklist Compliance Analysis</div>', unsafe_allow_html=True)

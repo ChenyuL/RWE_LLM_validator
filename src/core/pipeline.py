@@ -149,14 +149,23 @@ class EnhancedValidationPipeline:
             guideline_texts.append(text)
         
         # Use reasoner to process guidelines and generate prompts
-        guideline_items = self.reasoner.extract_guideline_items(guideline_texts)
-        prompts = self.reasoner.generate_prompts(guideline_items)
-        
-        return {
-            "guideline_type": guideline_type,
-            "items": guideline_items,
-            "prompts": prompts
-        }
+        try:
+            guideline_items = self.reasoner.extract_guideline_items(guideline_texts)
+            prompts = self.reasoner.generate_prompts(guideline_items)
+            
+            return {
+                "guideline_type": guideline_type,
+                "items": guideline_items,
+                "prompts": prompts
+            }
+        except Exception as e:
+            self.logger.error(f"Error processing guideline {guideline_type}: {e}")
+            # Return empty structure to prevent pipeline failure
+            return {
+                "guideline_type": guideline_type,
+                "items": [],
+                "prompts": {}
+            }
     
     def process_paper(self, paper_path: str, guideline_prompts: Dict[str, Any], 
                      batch_size: int = 5) -> Dict[str, Any]:

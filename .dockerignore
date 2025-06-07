@@ -1,0 +1,125 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+logs/
+validation.log
+cleanup_output.log
+direct_batch.log
+extractor_validator_direct.log
+get_li_paper_prompts_rag.log
+llm_validation.log
+rag_batch_improved.log
+rag_extractor_validator_improved.log
+rag_extractor_validator_swapped.log
+rag_extractor_validator.log
+record_test_openai_claude_fixed.log
+
+# Temporary files
+*.tmp
+*.temp
+.coverage
+.pytest_cache/
+
+# Large files that shouldn't be in container
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.svg
+
+# Backup files
+*.bkp
+*.backup
+*.bak
+
+# Archive and experiment files (optional - comment out if you want to include them)
+archive/
+Current_code /
+untitled folder/
+manuscript/
+
+# Specific files
+.$LLMProtocol.drawio.bkp
+LLMProtocol.drawio
+LLMProtocol.drawio.png
+*.xlsx
+*.csv
+*.docx
+agreement_by_config.png
+agreement_by_item.png
+agreement_distribution.png
+correlation_plots.png
+model_output_agreement_by_item.png
+model_output_agreement_by_paper.png
+rag_agreement_by_config.png
+rag_agreement_by_item.png
+rag_agreement_distribution.png
+
+# Scripts that are not needed in production
+run_all_papers.py
+run_analysis_complete.sh
+run_direct_batch.py
+run_direct_batch.sh
+run_li_paper_analysis_complete.py
+run_li_paper_analysis.py
+add_human_comparison.py
+analyze_updated_human_comparison.py
+convert_to_excel.py
+extract_and_compare_with_human.py
+fix_agreement_calculation.py
+fix_li_paper_analysis.py
+get_li_paper_prompts_updated.py
+test_record_validation_openai_claude_fixed.py

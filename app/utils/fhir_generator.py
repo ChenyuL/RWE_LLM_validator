@@ -345,8 +345,8 @@ def generate_enhanced_bulk_fhir_evidence(papers: List[str], model: str, api_keys
     except ImportError:
         has_streamlit = False
     
-    # Base papers directory
-    papers_dir = "/Users/chenyuli/Desktop/Macbookpro/LLMEvaluation/RWE_LLM_validator/data/Papers"
+    # Base papers directory - use relative path that works both locally and on Streamlit Cloud
+    papers_dir = Path(__file__).parent.parent.parent / "data" / "Papers"
     
     for i, paper_file in enumerate(papers):
         if has_streamlit:
@@ -354,7 +354,7 @@ def generate_enhanced_bulk_fhir_evidence(papers: List[str], model: str, api_keys
             progress_bar.progress(i / len(papers))
         
         # Construct full path to PDF
-        pdf_path = os.path.join(papers_dir, paper_file)
+        pdf_path = papers_dir / paper_file
         
         if os.path.exists(pdf_path):
             # Extract PDF content

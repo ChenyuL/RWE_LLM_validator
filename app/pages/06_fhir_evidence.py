@@ -6,12 +6,15 @@ from pathlib import Path
 from utils.file_helpers import (
     get_results, get_result_files, get_result_file_path, read_json_file
 )
-from utils.session_state import load_api_keys_from_env
+from utils.session_state import load_api_keys_from_env, initialize_session_state
 from utils.fhir_generator import (
     generate_fhir_evidence, generate_bulk_fhir_evidence, 
     generate_enhanced_fhir_evidence, generate_enhanced_bulk_fhir_evidence,
     create_fhir_bundle, create_generation_summary
 )
+
+# Ensure session state is initialized
+initialize_session_state()
 
 # Page header
 st.header("🔬 FHIR Evidence Generation")
@@ -38,9 +41,10 @@ with st.expander("ℹ️ About FHIR Evidence Resources", expanded=False):
 import os
 from pathlib import Path
 
-papers_dir = "/Users/chenyuli/Desktop/Macbookpro/LLMEvaluation/RWE_LLM_validator/data/Papers"
-if os.path.exists(papers_dir):
-    paper_files = [f for f in os.listdir(papers_dir) if f.endswith('.pdf')]
+# Use relative path that works both locally and on Streamlit Cloud
+papers_dir = Path(__file__).parent.parent.parent / "data" / "Papers"
+if papers_dir.exists():
+    paper_files = [f.name for f in papers_dir.glob("*.pdf")]
 else:
     paper_files = []
 

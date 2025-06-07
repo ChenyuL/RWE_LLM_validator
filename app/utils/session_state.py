@@ -75,6 +75,10 @@ def load_api_keys_from_env():
         'deepseek': os.getenv('DEEPSEEK_API_KEY', '')
     }
     
+    # Ensure session state is initialized
+    if 'api_keys' not in st.session_state:
+        initialize_session_state()
+    
     # Update session state
     st.session_state.api_keys.update(api_keys)
     
